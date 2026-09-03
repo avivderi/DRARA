@@ -1,0 +1,41 @@
+name: drara
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: drara_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: drara_dev
+      POSTGRES_USER: drara
+      POSTGRES_PASSWORD: drara_dev_password
+    ports:
+      - '5432:5432'
+    volumes:
+      - drara_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U drara -d drara_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: drara_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - drara_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  drara_postgres_data:
+  drara_redis_data:
