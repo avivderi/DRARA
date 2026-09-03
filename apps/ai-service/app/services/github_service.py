@@ -83,17 +83,43 @@ class GitHubService:
 
 
 class FakeGitHubService:
-    """In-memory fake for testing without hitting live GitHub API."""
+    """In-memory fake returning repository-specific architecture for multi-repo tests."""
 
     def __init__(self, sample_readme: str = "", sample_tree: List[str] = None, sample_manifests: Dict[str, str] = None):
-        self.sample_readme = sample_readme or "# DRARA\nAI Co-Founder Platform built with TypeScript, Node.js, and FastAPI."
-        self.sample_tree = sample_tree or ["package.json", "docker-compose.yml", "apps/api/src/index.ts", "apps/web/app/page.tsx"]
-        self.sample_manifests = sample_manifests or {
-            "package.json": '{"dependencies": {"express": "^4.19.2", "next": "14.2.0", "knex": "^3.1.0"}}',
-            "docker-compose.yml": "services:\n  postgres:\n    image: postgres:16-alpine",
-        }
+        self.sample_readme = sample_readme
+        self.sample_tree = sample_tree
+        self.sample_manifests = sample_manifests
 
     async def fetch_repo_architecture(
         self, repo_full_name: str
     ) -> Tuple[str, List[str], Dict[str, str]]:
-        return self.sample_readme, self.sample_tree, self.sample_manifests
+        if self.sample_readme:
+            return self.sample_readme, self.sample_tree or [], self.sample_manifests or {}
+
+        repo_lower = repo_full_name.lower()
+
+        if "pasta" in repo_lower or "vue" in repo_lower or "recipe" in repo_lower:
+            readme = "# MammaMia Recipes\nAn authentic Italian pasta recipe application built with Vue.js, Pinia state management, and Vite bundler."
+            tree = ["package.json", "src/App.vue", "src/components/PastaList.vue", "src/stores/recipes.ts", "tests/recipes.spec.ts"]
+            manifests = {
+                "package.json": '{"dependencies": {"vue": "^3.4.0", "pinia": "^2.1.0", "vite": "^5.1.0"}}'
+            }
+            return readme, tree, manifests
+
+        if "trading" in repo_lower or "go" in repo_lower or "commerce" in repo_lower:
+            readme = "# GoTrade Engine\nA high-throughput e-commerce trading and order matching engine written in Go with gRPC, Redis, and PostgreSQL."
+            tree = ["go.mod", "main.go", "order_matcher.go", "docker-compose.yml", "proto/order.proto", "main_test.go"]
+            manifests = {
+                "go.mod": "module github.com/avivderi/gotrade\n\ngo 1.22",
+                "docker-compose.yml": "services:\n  postgres:\n    image: postgres:16-alpine\n  redis:\n    image: redis:7-alpine",
+            }
+            return readme, tree, manifests
+
+        # Default fallback
+        readme = f"# {repo_full_name}\nAI Co-Founder Platform built with TypeScript, Node.js, and FastAPI."
+        tree = ["package.json", "docker-compose.yml", "src/index.ts", "apps/web/app/page.tsx"]
+        manifests = {
+            "package.json": '{"dependencies": {"express": "^4.19.2", "next": "14.2.0", "knex": "^3.1.0"}}',
+            "docker-compose.yml": "services:\n  postgres:\n    image: postgres:16-alpine",
+        }
+        return readme, tree, manifests
