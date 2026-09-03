@@ -67,7 +67,7 @@ export class JwtService {
     const match = /^(\d+)([smhd])$/.exec(expiresIn);
     if (!match) throw new Error(`Invalid expiresIn format: ${expiresIn}`);
     const [, value, unit] = match;
-    const ms = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[unit as 's' | 'm' | 'h' | 'd']!;
+    const ms = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[unit as 's' | 'm' | 'h' | 'd'];
     now.setTime(now.getTime() + Number(value) * ms);
     return now;
   }

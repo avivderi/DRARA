@@ -2,13 +2,14 @@ import cors from 'cors';
 import express, { type Application, type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 
+import { AppError } from './lib/errors';
 import { logger } from './lib/logger';
 import { authRouter } from './routes/auth.routes';
 import { githubRouter } from './routes/github.routes';
 import { ideasRouter } from './routes/ideas.routes';
+import { matchingRouter } from './routes/matching.routes';
 import { sessionRouter } from './routes/session.routes';
 import { usersRouter } from './routes/users.routes';
-import { AppError } from './lib/errors';
 
 export function createApp(): Application {
   const app = express();
@@ -42,6 +43,7 @@ export function createApp(): Application {
   app.use('/session', sessionRouter);
   app.use('/ideas', ideasRouter);
   app.use('/github', githubRouter);
+  app.use('/', matchingRouter);
 
   // ── 404 handler ──────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

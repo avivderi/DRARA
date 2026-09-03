@@ -1,5 +1,5 @@
-import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { describe, it, beforeEach } from 'node:test';
 
 import { FakeConnectedRepoRepository } from './connected-repo.repository.fake';
 

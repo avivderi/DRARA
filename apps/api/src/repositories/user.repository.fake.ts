@@ -23,6 +23,8 @@ export class FakeUserRepository implements IUserRepository {
       provider_id: input.provider_id,
       github_username: input.githubUsername ?? null,
       skills: [],
+      offering_tags: [],
+      seeking_tags: [],
       experience_level: null,
       commitment_level: null,
       bio: null,
@@ -61,6 +63,15 @@ export class FakeUserRepository implements IUserRepository {
     const updated: User = { ...existing, ...input, updated_at: new Date() };
     this.store.set(id, updated);
     return structuredClone(updated);
+  }
+
+  async updateEmbeddings(id: string, offeringVector?: number[], seekingVector?: number[]): Promise<void> {
+    const existing = this.store.get(id);
+    if (!existing) return;
+    if (offeringVector) existing.offering_embedding = offeringVector;
+    if (seekingVector) existing.seeking_embedding = seekingVector;
+    existing.updated_at = new Date();
+    this.store.set(id, existing);
   }
 
   /** Test helper: reset store between tests */

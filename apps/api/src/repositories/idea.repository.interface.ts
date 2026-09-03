@@ -7,11 +7,13 @@ export interface Idea {
   description: string | null;
   manual_description: string | null;
   visibility: IdeaVisibility;
+  seeking_tags?: string[];
   ai_summary: string | null;
   stack_detected: string[];
   readiness_score: number | null;
   readiness_rationale: string | null;
   last_scanned_at: Date | null;
+  seeking_embedding?: number[];
   created_at: Date;
   updated_at: Date;
 }
@@ -19,11 +21,12 @@ export interface Idea {
 export type CreateIdeaInput = Pick<Idea, 'user_id' | 'title'> & {
   description?: string;
   manual_description?: string;
+  seeking_tags?: string[];
   visibility?: IdeaVisibility;
 };
 
 export type UpdateIdeaInput = Partial<
-  Pick<Idea, 'title' | 'description' | 'manual_description' | 'visibility'>
+  Pick<Idea, 'title' | 'description' | 'manual_description' | 'seeking_tags' | 'visibility'>
 >;
 
 export interface ScanResultInput {
@@ -41,4 +44,5 @@ export interface IIdeaRepository {
   updateScanResult(id: string, scan: ScanResultInput): Promise<Idea | null>;
   updateManualDescription(id: string, description: string): Promise<Idea | null>;
   updateVisibility(id: string, visibility: IdeaVisibility): Promise<Idea | null>;
+  updateSeekingEmbedding(id: string, seekingVector: number[]): Promise<void>;
 }

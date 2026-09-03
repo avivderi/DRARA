@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+
 import type { Request, Response } from 'express';
 
 import { db } from '../db/connection';

@@ -38,9 +38,13 @@ export class KnexIdeaRepository implements IIdeaRepository {
   }
 
   async update(id: string, input: UpdateIdeaInput): Promise<Idea | null> {
+    const updateData: Record<string, unknown> = { ...input, updated_at: this.db.fn.now() };
+    if (input.seeking_tags) {
+      updateData['seeking_tags'] = this.db.raw('?::text[]', [input.seeking_tags]);
+    }
     const [updated] = await this.db<Idea>('ideas')
       .where({ id })
-      .update({ ...input, updated_at: this.db.fn.now() })
+      .update(updateData as Partial<Idea>)
       .returning('*');
     return updated ?? null;
   }
@@ -50,7 +54,7 @@ export class KnexIdeaRepository implements IIdeaRepository {
       .where({ id })
       .update({
         ai_summary: scan.ai_summary,
-        stack_detected: scan.stack_detected,
+        stack_detected: this.db.raw('?::text[]', [scan.stack_detected]),
         readiness_score: scan.readiness_score,
         readiness_rationale: scan.readiness_rationale,
         last_scanned_at: this.db.fn.now(),
@@ -80,5 +84,14 @@ export class KnexIdeaRepository implements IIdeaRepository {
       })
       .returning('*');
     return updated ?? null;
+  }
+
+  async updateSeekingEmbedding(id: string, seekingVector: number[]): Promise<void> {
+    await this.db('ideas')
+      .where({ id })
+      .update({
+        seeking_embedding: this.db.raw('?::vector', [JSON.stringify(seekingVector)]),
+        updated_at: this.db.fn.now(),
+      });
   }
 }

@@ -87,27 +87,24 @@ npm test --workspace=apps/api
 
 ## Module Roadmap
 - ✅ **Module 1** — Core Infrastructure (Auth, DB, QR Session)
-- 🔜 **Module 2** — GitHub Scanning + AI Idea Analysis
-- 🔜 **Module 3** — Matching Engine
+- ✅ **Module 2** — GitHub Scanning + AI Idea Analysis
+- ✅ **Module 3** — Matching Engine (`pgvector` cosine similarity, Voyage AI embeddings, symmetric matching)
 - 🔜 **Module 4** — NFC Handshake (DRARA Protocol)
 - 🔜 **Module 5** — Vetting Flow + Chat
 - 🔜 **Module 6** — Co-Building Workspace
 
-## API Endpoints (Module 1)
+## Module 3 Architecture & Vector Embeddings
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/health` | - | Service health check |
-| GET | `/auth/google` | - | Start Google OAuth |
-| GET | `/auth/github` | - | Start GitHub OAuth |
-| POST | `/auth/refresh` | - | Rotate refresh token |
-| POST | `/auth/logout` | - | Revoke refresh token |
-| GET | `/users/me` | Bearer | Get own profile |
-| PATCH | `/users/me` | Bearer | Update profile |
-| POST | `/session/qr-init` | - | Init QR web session |
-| POST | `/session/qr-confirm` | Bearer | Mobile confirms QR |
-| GET | `/session/qr-status/:token` | - | Poll QR status |
+Module 3 implements embedding-based similarity matching using PostgreSQL's `pgvector` extension and Voyage AI (`voyage-3-lite`, 1024 dimensions):
+- **Vector Storage**: `offering_embedding` (1024-dim) and `seeking_embedding` (1024-dim) stored directly on `users` and `ideas` with `HNSW` vector cosine index (`vector_cosine_ops`).
+- **Symmetric Matching**: Supports bidirectional matching — Idea `seeking_tags` vs User `offering_tags` (`GET /ideas/:id/matches`), and User `seeking_tags` vs active public Ideas (`GET /users/me/matches`).
+- **Visibility Rules**: Ideas marked `private_ai_recommend` or `invite_only` restrict match access strictly to the owner (`403 MATCHES_PRIVATE_TO_OWNER`).
+- **Caching & Rate Limiting**: Match query results are cached in Redis with a 24-hour TTL (`forceRecompute` query parameter supported).
+
+### ⚠️ Future Scalability Risk & TODO (Debounce / Background Queue)
+When users update `offering_tags`/`seeking_tags` frequently on Screen 9, synchronous calls to `/embed` can introduce latency or trigger Voyage AI API rate limits.
+*Future Action*: Implement a background job queue (e.g. BullMQ / Celery) with a 5-second debounce window to batch embedding regeneration asynchronously.
 
 ---
 
-*Built by Aviv Deri — DRARA v0.1 — Module 1*
+*Built by Aviv Deri — DRARA v0.3 — Module 3*

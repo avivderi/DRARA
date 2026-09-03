@@ -46,10 +46,31 @@ export class KnexUserRepository implements IUserRepository {
   }
 
   async update(id: string, input: UpdateUserInput): Promise<User | null> {
+    const updateData: Record<string, unknown> = { ...input, updated_at: this.db.fn.now() };
+    if (input.skills) {
+      updateData['skills'] = this.db.raw('?::text[]', [input.skills]);
+    }
+    if (input.offering_tags) {
+      updateData['offering_tags'] = this.db.raw('?::text[]', [input.offering_tags]);
+    }
+    if (input.seeking_tags) {
+      updateData['seeking_tags'] = this.db.raw('?::text[]', [input.seeking_tags]);
+    }
     const [user] = await this.db<User>('users')
       .where({ id })
-      .update({ ...input, updated_at: this.db.fn.now() })
+      .update(updateData as Partial<User>)
       .returning('*');
     return user ?? null;
+  }
+
+  async updateEmbeddings(id: string, offeringVector?: number[], seekingVector?: number[]): Promise<void> {
+    const updates: Record<string, unknown> = { updated_at: this.db.fn.now() };
+    if (offeringVector && offeringVector.length > 0) {
+      updates['offering_embedding'] = this.db.raw('?::vector', [JSON.stringify(offeringVector)]);
+    }
+    if (seekingVector && seekingVector.length > 0) {
+      updates['seeking_embedding'] = this.db.raw('?::vector', [JSON.stringify(seekingVector)]);
+    }
+    await this.db('users').where({ id }).update(updates);
   }
 }

@@ -21,6 +21,7 @@ export class FakeIdeaRepository implements IIdeaRepository {
       description: input.description ?? null,
       manual_description: input.manual_description ?? null,
       visibility: input.visibility ?? 'private_ai_recommend',
+      seeking_tags: input.seeking_tags ?? [],
       ai_summary: null,
       stack_detected: [],
       readiness_score: null,
@@ -65,7 +66,7 @@ export class FakeIdeaRepository implements IIdeaRepository {
       last_scanned_at: now,
       updated_at: now,
     };
-    this.store.set(id, updated);
+    this.store.set(id, existing);
     return structuredClone(updated);
   }
 
@@ -91,6 +92,14 @@ export class FakeIdeaRepository implements IIdeaRepository {
     };
     this.store.set(id, updated);
     return structuredClone(updated);
+  }
+
+  async updateSeekingEmbedding(id: string, seekingVector: number[]): Promise<void> {
+    const existing = this.store.get(id);
+    if (!existing) return;
+    existing.seeking_embedding = seekingVector;
+    existing.updated_at = new Date();
+    this.store.set(id, existing);
   }
 
   clear(): void {

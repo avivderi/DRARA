@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
+import { describe, it } from 'node:test';
 
 import { verifyGitHubWebhookSignature } from './github.controller';
 
