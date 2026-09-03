@@ -4,6 +4,8 @@ import helmet from 'helmet';
 
 import { logger } from './lib/logger';
 import { authRouter } from './routes/auth.routes';
+import { githubRouter } from './routes/github.routes';
+import { ideasRouter } from './routes/ideas.routes';
 import { sessionRouter } from './routes/session.routes';
 import { usersRouter } from './routes/users.routes';
 import { AppError } from './lib/errors';
@@ -38,6 +40,8 @@ export function createApp(): Application {
   app.use('/auth', authRouter);
   app.use('/users', usersRouter);
   app.use('/session', sessionRouter);
+  app.use('/ideas', ideasRouter);
+  app.use('/github', githubRouter);
 
   // ── 404 handler ──────────────────────────────────────────
   app.use((_req: Request, res: Response) => {
