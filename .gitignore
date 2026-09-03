@@ -11,3 +11,8 @@ coverage/
 .DS_Store
 Thumbs.db
 *.log
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
