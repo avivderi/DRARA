@@ -38,9 +38,28 @@ export class KnexIdeaRepository implements IIdeaRepository {
   }
 
   async update(id: string, input: UpdateIdeaInput): Promise<Idea | null> {
+    const updateData: Record<string, unknown> = { ...input, updated_at: this.db.fn.now() };
+
+    if (input.seeking_embedding) {
+      updateData['seeking_embedding'] = `[${input.seeking_embedding.join(',')}]`;
+    }
+
     const [updated] = await this.db<Idea>('ideas')
       .where({ id })
-      .update({ ...input, updated_at: this.db.fn.now() })
+      .update(updateData)
+      .returning('*');
+    return updated ?? null;
+  }
+
+  async updateSeekingEmbedding(id: string, seekingTags: string[], seekingEmbedding: number[]): Promise<Idea | null> {
+    const vectorStr = `[${seekingEmbedding.join(',')}]`;
+    const [updated] = await this.db<Idea>('ideas')
+      .where({ id })
+      .update({
+        seeking_tags: seekingTags,
+        seeking_embedding: vectorStr as unknown as number[],
+        updated_at: this.db.fn.now(),
+      })
       .returning('*');
     return updated ?? null;
   }

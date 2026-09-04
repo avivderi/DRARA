@@ -1,6 +1,7 @@
+import { AppError } from '../lib/errors';
 import type { IRefreshTokenRepository } from '../repositories/refresh-token.repository.interface';
 import type { CreateUserInput, IUserRepository, User } from '../repositories/user.repository.interface';
-import { AppError } from '../lib/errors';
+
 import type { JwtService, TokenPair } from './jwt.service';
 
 export interface OAuthProfile {

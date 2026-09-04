@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import scan_router
+from app.routers import embed_router, scan_router
 
 app = FastAPI(
     title="DRARA AI Microservice",
@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(scan_router.router)
+app.include_router(embed_router.router)
 
 
 @app.get("/health")

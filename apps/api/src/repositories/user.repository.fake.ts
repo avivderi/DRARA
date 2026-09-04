@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   CreateUserInput,
   IUserRepository,
+  MatchedUserCandidate,
   UpdateUserInput,
   User,
   UserProvider,
@@ -61,6 +62,39 @@ export class FakeUserRepository implements IUserRepository {
     const updated: User = { ...existing, ...input, updated_at: new Date() };
     this.store.set(id, updated);
     return structuredClone(updated);
+  }
+
+  async findMatchingUsersForOfferingVector(
+    seekingVector: number[],
+    excludeUserId: string,
+    limit: number = 10,
+  ): Promise<MatchedUserCandidate[]> {
+    const candidates: MatchedUserCandidate[] = [];
+
+    for (const user of this.store.values()) {
+      if (user.id === excludeUserId || !user.offering_embedding) continue;
+
+      // Cosine similarity = (A dot B) / (|A| * |B|)
+      let dot = 0;
+      let magA = 0;
+      let magB = 0;
+      const offVec = user.offering_embedding;
+      const minLen = Math.min(seekingVector.length, offVec.length);
+
+      for (let i = 0; i < minLen; i++) {
+        const a = seekingVector[i] ?? 0;
+        const b = offVec[i] ?? 0;
+        dot += a * b;
+        magA += a * a;
+        magB += b * b;
+      }
+
+      const sim = magA > 0 && magB > 0 ? dot / (Math.sqrt(magA) * Math.sqrt(magB)) : 0;
+      candidates.push({ user: structuredClone(user), similarityScore: sim });
+    }
+
+    candidates.sort((a, b) => b.similarityScore - a.similarityScore);
+    return candidates.slice(0, limit);
   }
 
   /** Test helper: reset store between tests */

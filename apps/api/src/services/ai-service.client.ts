@@ -62,4 +62,28 @@ export class AIServiceClient {
       throw AppError.internal('Unable to connect to AI scanning service');
     }
   }
+
+  async generateEmbedding(payload: { text?: string; tags?: string[]; bio?: string }): Promise<number[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/embed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        logger.error({ status: response.status, body: errText }, 'AI embedding service returned error');
+        throw AppError.internal('AI embedding service failed');
+      }
+
+      const result = (await response.json()) as { embedding: number[]; dimension: number };
+      return result.embedding;
+    } catch (err: unknown) {
+      if (err instanceof AppError) throw err;
+      logger.error({ err }, 'Failed to communicate with AI embedding service');
+      throw AppError.internal('Unable to connect to AI embedding service');
+    }
+  }
 }
+

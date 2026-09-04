@@ -1,11 +1,12 @@
-import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { describe, it, before, after } from 'node:test';
 
 import { db } from '../db/connection';
 import { connectRedis, redis } from '../lib/redis';
 import { KnexConnectedRepoRepository } from '../repositories/connected-repo.repository';
 import { KnexIdeaRepository } from '../repositories/idea.repository';
 import { KnexUserRepository } from '../repositories/user.repository';
+
 import { AIServiceClient } from './ai-service.client';
 import { IdeasService } from './ideas.service';
 

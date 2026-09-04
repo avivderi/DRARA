@@ -93,6 +93,19 @@ export class FakeIdeaRepository implements IIdeaRepository {
     return structuredClone(updated);
   }
 
+  async updateSeekingEmbedding(id: string, seekingTags: string[], seekingEmbedding: number[]): Promise<Idea | null> {
+    const existing = this.store.get(id);
+    if (!existing) return null;
+    const updated: Idea = {
+      ...existing,
+      seeking_tags: seekingTags,
+      seeking_embedding: seekingEmbedding,
+      updated_at: new Date(),
+    };
+    this.store.set(id, updated);
+    return structuredClone(updated);
+  }
+
   clear(): void {
     this.store.clear();
   }

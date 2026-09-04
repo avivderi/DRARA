@@ -1,10 +1,11 @@
-import { describe, it, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { describe, it, before, after, beforeEach } from 'node:test';
 
 import { db } from '../db/connection';
 import { KnexRefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { KnexUserRepository } from '../repositories/user.repository';
+
 import { AuthService, type OAuthProfile } from './auth.service';
 import { JwtService } from './jwt.service';
 

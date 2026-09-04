@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 
-import jwt from 'jsonwebtoken';
+import { sign, verify, type SignOptions } from 'jsonwebtoken';
 
 export interface AccessTokenPayload {
   sub: string; // user id
@@ -34,14 +34,14 @@ export class JwtService {
   }
 
   signAccessToken(userId: string, email: string): string {
-    return jwt.sign({ sub: userId, email }, this.privateKey, {
+    return sign({ sub: userId, email }, this.privateKey, {
       algorithm: 'RS256',
-      expiresIn: this.accessTokenExpiresIn as jwt.SignOptions['expiresIn'],
+      expiresIn: this.accessTokenExpiresIn as SignOptions['expiresIn'],
     });
   }
 
   verifyAccessToken(token: string): AccessTokenPayload {
-    return jwt.verify(token, this.publicKey, { algorithms: ['RS256'] }) as AccessTokenPayload;
+    return verify(token, this.publicKey, { algorithms: ['RS256'] }) as AccessTokenPayload;
   }
 
   generateTokenPair(userId: string, email: string): TokenPair {
@@ -67,7 +67,7 @@ export class JwtService {
     const match = /^(\d+)([smhd])$/.exec(expiresIn);
     if (!match) throw new Error(`Invalid expiresIn format: ${expiresIn}`);
     const [, value, unit] = match;
-    const ms = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[unit as 's' | 'm' | 'h' | 'd']!;
+    const ms = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[unit as 's' | 'm' | 'h' | 'd'];
     now.setTime(now.getTime() + Number(value) * ms);
     return now;
   }

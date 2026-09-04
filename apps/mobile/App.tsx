@@ -1,6 +1,6 @@
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
 interface HealthResponse {
   status: 'ok' | 'error';

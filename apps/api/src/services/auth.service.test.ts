@@ -1,8 +1,9 @@
-import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { describe, it, beforeEach } from 'node:test';
 
 import { FakeRefreshTokenRepository } from '../repositories/refresh-token.repository.fake';
 import { FakeUserRepository } from '../repositories/user.repository.fake';
+
 import { AuthService } from './auth.service';
 import type { OAuthProfile } from './auth.service';
 import { jwtService } from './jwt.service';

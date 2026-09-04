@@ -1,8 +1,9 @@
-import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { describe, it, beforeEach } from 'node:test';
 
 import { FakeConnectedRepoRepository } from '../repositories/connected-repo.repository.fake';
 import { FakeIdeaRepository } from '../repositories/idea.repository.fake';
+
 import type { AIScanRequestPayload, AIScanResponsePayload } from './ai-service.client';
 import { IdeasService } from './ideas.service';
 
