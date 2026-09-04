@@ -1,111 +1,224 @@
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  I18nManager,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-interface HealthResponse {
-  status: 'ok' | 'error';
-  service?: string;
-  timestamp?: string;
+// Enable RTL globally for Hebrew
+try {
+  if (!I18nManager.isRTL) {
+    I18nManager.forceRTL(true);
+  }
+} catch {
+  // Ignore on web
 }
 
-const API_URL = 'http://localhost:3001';
+import { LoginScreen } from './src/screens/group1/LoginScreen';
+import { RoleSelectionScreen } from './src/screens/group1/RoleSelectionScreen';
+import { WelcomeScreen } from './src/screens/group1/WelcomeScreen';
+import { AIScanLoadingScreen } from './src/screens/group2/AIScanLoadingScreen';
+import { MatchesFeedScreen } from './src/screens/group3/MatchesFeedScreen';
+import { NFCHandshakeScreen } from './src/screens/group4/NFCHandshakeScreen';
+import { NFCSuccessScreen } from './src/screens/group4/NFCSuccessScreen';
+import { colors, fonts } from './src/theme/tokens';
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+const fontRegular = require('./assets/fonts/GoogleSans-Regular.ttf') as number;
+const fontMedium = require('./assets/fonts/GoogleSans-Medium.ttf') as number;
+const fontSemiBold = require('./assets/fonts/GoogleSans-SemiBold.ttf') as number;
+const fontBold = require('./assets/fonts/GoogleSans-Bold.ttf') as number;
+/* eslint-enable @typescript-eslint/no-var-requires */
+
+type ScreenId =
+  | 'welcome'
+  | 'login'
+  | 'role_selection'
+  | 'ai_scan'
+  | 'matches_feed'
+  | 'nfc_handshake'
+  | 'nfc_success';
+
+const SCREENS: { id: ScreenId; title: string }[] = [
+  { id: 'welcome', title: '1. ברוכים הבאים' },
+  { id: 'login', title: '2. התחברות' },
+  { id: 'role_selection', title: '5. בחירת תפקיד' },
+  { id: 'ai_scan', title: '14. ניתוח AI' },
+  { id: 'matches_feed', title: '19. פיד התאמות' },
+  { id: 'nfc_handshake', title: '44. NFC Handshake' },
+  { id: 'nfc_success', title: '46. הצלחת NFC' },
+];
 
 export default function App() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [fontsLoaded] = useFonts({
+    'GoogleSans-Regular': fontRegular,
+    'GoogleSans-Medium': fontMedium,
+    'GoogleSans-SemiBold': fontSemiBold,
+    'GoogleSans-Bold': fontBold,
+  });
 
-  useEffect(() => {
-    fetch(`${API_URL}/health`)
-      .then((res) => res.json())
-      .then((data: HealthResponse) => {
-        setHealth(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setHealth({ status: 'error' });
-        setLoading(false);
-      });
-  }, []);
+  const [currentScreen, setCurrentScreen] = useState<ScreenId>('welcome');
+
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case 'welcome':
+        return (
+          <WelcomeScreen
+            onNavigateLogin={() => setCurrentScreen('login')}
+            onNavigateRegister={() => setCurrentScreen('role_selection')}
+          />
+        );
+      case 'login':
+        return (
+          <LoginScreen
+            onBack={() => setCurrentScreen('welcome')}
+            onLoginSuccess={() => setCurrentScreen('matches_feed')}
+          />
+        );
+      case 'role_selection':
+        return (
+          <RoleSelectionScreen
+            onBack={() => setCurrentScreen('welcome')}
+            onSelectRole={() => setCurrentScreen('ai_scan')}
+          />
+        );
+      case 'ai_scan':
+        return (
+          <AIScanLoadingScreen
+            githubUsername="avivderi"
+            onScanComplete={() => setCurrentScreen('matches_feed')}
+          />
+        );
+      case 'matches_feed':
+        return (
+          <MatchesFeedScreen
+            ideaId="demo-idea-1"
+            onSelectCandidate={() => setCurrentScreen('nfc_handshake')}
+          />
+        );
+      case 'nfc_handshake':
+        return (
+          <NFCHandshakeScreen
+            targetUserId="user-456"
+            targetUserName="רועי כהן"
+            onHandshakeSuccess={() => setCurrentScreen('nfc_success')}
+            onCancel={() => setCurrentScreen('matches_feed')}
+          />
+        );
+      case 'nfc_success':
+        return (
+          <NFCSuccessScreen
+            partnerName="רועי כהן"
+            onContinueToWorkspace={() => setCurrentScreen('matches_feed')}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🚀 DRARA Mobile</Text>
-      <Text style={styles.subtitle}>AI Co-Founder & Idea Protection Platform</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>API Health Status</Text>
-        {loading ? (
-          <ActivityIndicator color="#a78bfa" />
-        ) : (
-          <View style={styles.statusRow}>
-            <View
+      {/* Screen Preview Switcher Bar */}
+      <View style={styles.switcherBar}>
+        <Text style={styles.switcherLabel}>תצוגת מסכים:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.switcherScroll}>
+          {SCREENS.map((s) => (
+            <TouchableOpacity
+              key={s.id}
               style={[
-                styles.badge,
-                { backgroundColor: health?.status === 'ok' ? '#4ade80' : '#f87171' },
+                styles.switcherChip,
+                currentScreen === s.id && styles.switcherChipActive,
               ]}
-            />
-            <Text
-              style={[
-                styles.statusText,
-                { color: health?.status === 'ok' ? '#4ade80' : '#f87171' },
-              ]}
+              onPress={() => setCurrentScreen(s.id)}
             >
-              {health?.status === 'ok' ? 'Online' : 'Offline'}
-            </Text>
-          </View>
-        )}
+              <Text
+                style={[
+                  styles.switcherChipText,
+                  currentScreen === s.id && styles.switcherChipTextActive,
+                ]}
+              >
+                {s.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
-      <StatusBar style="light" />
-    </View>
+
+      {/* Screen Content */}
+      <View style={styles.screenContainer}>{renderCurrentScreen()}</View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingScreen: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#a78bfa',
-    marginBottom: 8,
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: '#1e1e2e',
-    borderColor: '#2d2d44',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    color: '#e2e8f0',
-    marginBottom: 12,
-  },
-  statusRow: {
+  switcherBar: {
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  badge: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  switcherLabel: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: colors.primary,
   },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '600',
+  switcherScroll: {
+    gap: 6,
+    paddingRight: 8,
+  },
+  switcherChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceAlt,
+  },
+  switcherChipActive: {
+    backgroundColor: colors.primary,
+  },
+  switcherChipText: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  switcherChipTextActive: {
+    color: colors.surface,
+    fontFamily: fonts.bold,
+  },
+  screenContainer: {
+    flex: 1,
   },
 });
+

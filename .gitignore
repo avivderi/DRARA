@@ -14,5 +14,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 .venv/
-.pytest_cache/
-
+*.zip
+Design/
+.idea/
+.vscode/
