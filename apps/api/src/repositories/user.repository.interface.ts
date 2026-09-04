@@ -10,15 +10,15 @@ export interface User {
   provider: UserProvider;
   provider_id: string;
   skills: string[];
-  offering_tags?: string[];
-  seeking_tags?: string[];
   experience_level: ExperienceLevel | null;
   commitment_level: CommitmentLevel | null;
   bio: string | null;
   github_username: string | null;
   device_public_key: string | null;
-  offering_embedding?: number[];
-  seeking_embedding?: number[];
+  offering_tags?: string[] | null;
+  seeking_tags?: string[] | null;
+  offering_embedding?: number[] | null;
+  seeking_embedding?: number[] | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -28,11 +28,16 @@ export type CreateUserInput = Pick<User, 'name' | 'email' | 'avatar_url' | 'prov
 };
 
 export type UpdateUserInput = Partial<
-  Pick<
-    User,
-    'name' | 'avatar_url' | 'skills' | 'offering_tags' | 'seeking_tags' | 'experience_level' | 'commitment_level' | 'bio'
-  >
->;
+  Pick<User, 'name' | 'avatar_url' | 'skills' | 'experience_level' | 'commitment_level' | 'bio' | 'offering_tags' | 'seeking_tags'>
+> & {
+  offering_embedding?: number[] | null;
+  seeking_embedding?: number[] | null;
+};
+
+export interface MatchedUserCandidate {
+  user: User;
+  similarityScore: number;
+}
 
 export interface IUserRepository {
   create(input: CreateUserInput): Promise<User>;
@@ -40,5 +45,9 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<User | null>;
   findByProvider(provider: UserProvider, providerId: string): Promise<User | null>;
   update(id: string, input: UpdateUserInput): Promise<User | null>;
-  updateEmbeddings(id: string, offeringVector?: number[], seekingVector?: number[]): Promise<void>;
+  findMatchingUsersForOfferingVector(
+    seekingVector: number[],
+    excludeUserId: string,
+    limit?: number,
+  ): Promise<MatchedUserCandidate[]>;
 }

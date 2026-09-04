@@ -3,6 +3,7 @@ import type { Knex } from 'knex';
 import type {
   CreateUserInput,
   IUserRepository,
+  MatchedUserCandidate,
   UpdateUserInput,
   User,
   UserProvider,
@@ -47,30 +48,49 @@ export class KnexUserRepository implements IUserRepository {
 
   async update(id: string, input: UpdateUserInput): Promise<User | null> {
     const updateData: Record<string, unknown> = { ...input, updated_at: this.db.fn.now() };
-    if (input.skills) {
-      updateData['skills'] = this.db.raw('?::text[]', [input.skills]);
+
+    if (input.offering_embedding) {
+      updateData['offering_embedding'] = `[${input.offering_embedding.join(',')}]`;
     }
-    if (input.offering_tags) {
-      updateData['offering_tags'] = this.db.raw('?::text[]', [input.offering_tags]);
+    if (input.seeking_embedding) {
+      updateData['seeking_embedding'] = `[${input.seeking_embedding.join(',')}]`;
     }
-    if (input.seeking_tags) {
-      updateData['seeking_tags'] = this.db.raw('?::text[]', [input.seeking_tags]);
-    }
+
     const [user] = await this.db<User>('users')
       .where({ id })
-      .update(updateData as Partial<User>)
+      .update(updateData)
       .returning('*');
     return user ?? null;
   }
 
-  async updateEmbeddings(id: string, offeringVector?: number[], seekingVector?: number[]): Promise<void> {
-    const updates: Record<string, unknown> = { updated_at: this.db.fn.now() };
-    if (offeringVector && offeringVector.length > 0) {
-      updates['offering_embedding'] = this.db.raw('?::vector', [JSON.stringify(offeringVector)]);
-    }
-    if (seekingVector && seekingVector.length > 0) {
-      updates['seeking_embedding'] = this.db.raw('?::vector', [JSON.stringify(seekingVector)]);
-    }
-    await this.db('users').where({ id }).update(updates);
+  async findMatchingUsersForOfferingVector(
+    seekingVector: number[] | string,
+    excludeUserId: string,
+    limit: number = 10,
+  ): Promise<MatchedUserCandidate[]> {
+    const vectorStr =
+      typeof seekingVector === 'string'
+        ? seekingVector
+        : Array.isArray(seekingVector)
+        ? `[${seekingVector.join(',')}]`
+        : String(seekingVector);
+
+    const queryResult = (await this.db.raw(
+      `SELECT *, (1 - (offering_embedding <=> ?::vector)) AS similarity_score
+       FROM users
+       WHERE id != ? AND offering_embedding IS NOT NULL
+       ORDER BY offering_embedding <=> ?::vector ASC
+       LIMIT ?`,
+      [vectorStr, excludeUserId, vectorStr, limit],
+    )) as { rows?: Array<User & { similarity_score: string | number }> } | Array<User & { similarity_score: string | number }>;
+
+    const rawList = Array.isArray(queryResult) ? queryResult : queryResult.rows ?? [];
+
+    const candidates: MatchedUserCandidate[] = rawList.map((row) => ({
+      user: row as User,
+      similarityScore: typeof row.similarity_score === 'number' ? row.similarity_score : parseFloat(String(row.similarity_score)),
+    }));
+
+    return candidates;
   }
 }

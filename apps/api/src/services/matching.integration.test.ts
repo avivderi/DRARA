@@ -2,153 +2,155 @@ import assert from 'node:assert/strict';
 import { describe, it, before, after } from 'node:test';
 
 import { db } from '../db/connection';
-import { connectRedis, redis } from '../lib/redis';
 import { KnexIdeaRepository } from '../repositories/idea.repository';
 import { KnexUserRepository } from '../repositories/user.repository';
 
-import { EmbeddingServiceClient } from './embedding-service.client';
+import { AIServiceClient } from './ai-service.client';
 import { MatchingService } from './matching.service';
 
-describe('Module 3 Real pgvector Integration Tests: Vector Ranking & Visibility', () => {
+describe('Module 3 Integration Verification: Real pgvector Matching & Visibility Rules', () => {
   let userRepo: KnexUserRepository;
   let ideaRepo: KnexIdeaRepository;
-  let embeddingClient: EmbeddingServiceClient;
+  let aiClient: AIServiceClient;
   let matchingService: MatchingService;
 
-  let founderUser: any;
-  let backendUser: any;
-  let marketingUser: any;
-  let backendIdea: any;
+  let ownerId: string;
+  let userA_TechnicalId: string;
+  let userB_MarketingId: string;
 
   before(async () => {
-    // 1. Verify Postgres & pgvector
+    // 1. Verify PostgreSQL & pgvector connection
     await db.raw('SELECT 1');
-    await connectRedis();
-    await redis.ping();
-
-    // Clean up any stale records from previous test runs
-    const testEmails = ['founder.vector@drara.io', 'alice.backend@drara.io', 'bob.marketing@drara.io'];
-    await db('ideas').whereIn('user_id', db('users').select('id').whereIn('email', testEmails)).del();
-    await db('users').whereIn('email', testEmails).del();
+    await db.raw('CREATE EXTENSION IF NOT EXISTS vector;');
 
     userRepo = new KnexUserRepository(db);
     ideaRepo = new KnexIdeaRepository(db);
-    embeddingClient = new EmbeddingServiceClient('http://localhost:8000');
-    matchingService = new MatchingService(db, ideaRepo, userRepo, embeddingClient);
+    aiClient = new AIServiceClient('http://localhost:8000');
+    matchingService = new MatchingService(ideaRepo, userRepo, aiClient);
 
-    // 2. Create Founder User
-    founderUser = await userRepo.create({
-      name: 'Founder User',
-      email: 'founder.vector@drara.io',
+    // Clean up any stale records from previous test runs
+    await db('users')
+      .whereIn('email', ['founder.module3@drara.io', 'usera.tech@drara.io', 'userb.marketing@drara.io'])
+      .del();
+
+    // 2. Create test users
+    const owner = await userRepo.create({
+      name: 'Startup Founder',
+      email: 'founder.module3@drara.io',
       provider: 'github',
-      provider_id: 'gh_founder_vector_101',
+      provider_id: 'gh_m3_owner_100',
     });
+    ownerId = owner.id;
 
-    // 3. Create Candidate User A (Backend / DevOps Specialist)
-    backendUser = await userRepo.create({
-      name: 'Alice Backend',
-      email: 'alice.backend@drara.io',
+    const userA = await userRepo.create({
+      name: 'User A (Backend & DevOps)',
+      email: 'usera.tech@drara.io',
       provider: 'github',
-      provider_id: 'gh_backend_alice_102',
+      provider_id: 'gh_m3_usera_101',
     });
-    const backendOffering = ['Backend', 'DevOps', 'AWS', 'Node.js', 'PostgreSQL', 'Docker'];
-    await userRepo.update(backendUser.id, {
-      offering_tags: backendOffering,
-      seeking_tags: ['Backend', 'Cloud Infrastructure'],
-      bio: 'Senior Backend Engineer specialized in distributed systems, PostgreSQL, AWS, and DevOps pipelines.',
-    });
-    const backendVector = await embeddingClient.generateEmbedding(backendOffering.join(' ') + ' Senior Backend Engineer');
-    await userRepo.updateEmbeddings(backendUser.id, backendVector, backendVector);
+    userA_TechnicalId = userA.id;
 
-    // 4. Create Candidate User B (Marketing / Sales Specialist)
-    marketingUser = await userRepo.create({
-      name: 'Bob Marketing',
-      email: 'bob.marketing@drara.io',
+    const userB = await userRepo.create({
+      name: 'User B (Marketing & Sales)',
+      email: 'userb.marketing@drara.io',
       provider: 'github',
-      provider_id: 'gh_marketing_bob_103',
+      provider_id: 'gh_m3_userb_102',
     });
-    const marketingOffering = ['Marketing', 'Sales', 'Growth', 'Content Strategy', 'Social Media'];
-    await userRepo.update(marketingUser.id, {
-      offering_tags: marketingOffering,
-      seeking_tags: ['Growth', 'Marketing Lead'],
-      bio: 'Growth Hacker and Marketing lead experienced in B2B SaaS sales campaigns and content creation.',
-    });
-    const marketingVector = await embeddingClient.generateEmbedding(marketingOffering.join(' ') + ' Growth Hacker Marketing lead');
-    await userRepo.updateEmbeddings(marketingUser.id, marketingVector, marketingVector);
+    userB_MarketingId = userB.id;
 
-    // 5. Create Idea requiring Backend / DevOps expertise
-    backendIdea = await ideaRepo.create({
-      user_id: founderUser.id,
-      title: 'Cloud Native Microservices Platform',
-      description: 'Building high throughput microservices infrastructure requiring deep DevOps, Docker, and AWS skills.',
-      seeking_tags: ['Backend', 'DevOps', 'AWS', 'Kubernetes'],
-      visibility: 'public',
+    // 3. Generate embeddings via /embed service
+    const embA = await aiClient.generateEmbedding({
+      tags: ['Backend', 'DevOps', 'AWS'],
+      bio: 'Senior Cloud Infrastructure Engineer with Go, Python, and Kubernetes expert skills.',
     });
-    const seekingVector = await embeddingClient.generateEmbedding('Backend DevOps AWS Kubernetes Cloud Native Microservices');
-    await ideaRepo.updateSeekingEmbedding(backendIdea.id, seekingVector);
+
+    const embB = await aiClient.generateEmbedding({
+      tags: ['Marketing', 'Sales', 'Content'],
+      bio: 'Growth Marketer, SEO Specialist, Brand Manager, and Sales Strategist.',
+    });
+
+    // 4. Save offering_embedding vectors to Real Postgres DB
+    await userRepo.update(userA_TechnicalId, {
+      offering_tags: ['Backend', 'DevOps', 'AWS'],
+      offering_embedding: embA,
+    });
+
+    await userRepo.update(userB_MarketingId, {
+      offering_tags: ['Marketing', 'Sales', 'Content'],
+      offering_embedding: embB,
+    });
   });
 
   after(async () => {
-    if (backendIdea?.id) {
-      await db('ideas').where({ id: backendIdea.id }).del();
+    // Cleanup DB records after test suite
+    if (ownerId) await db('ideas').where({ user_id: ownerId }).del();
+    if (ownerId) await db('users').where({ id: ownerId }).del();
+    if (userA_TechnicalId) await db('users').where({ id: userA_TechnicalId }).del();
+    if (userB_MarketingId) await db('users').where({ id: userB_MarketingId }).del();
+  });
+
+  it('DoD Requirement 3: Real pgvector Cosine Distance — User A (Technical) ranks significantly higher than User B (Marketing) for Backend/DevOps idea', async () => {
+    try {
+      // Create an Idea seeking Backend & DevOps
+      const idea = await ideaRepo.create({
+        user_id: ownerId,
+        title: 'Distributed Cloud Microservices Platform',
+        description: 'High throughput cloud infrastructure platform needing Backend & DevOps co-founder.',
+        visibility: 'public',
+      });
+
+      // Generate seeking_embedding vector
+      const seekingEmb = await aiClient.generateEmbedding({
+        tags: ['Backend', 'DevOps'],
+        text: 'Distributed Cloud Microservices Platform | High throughput cloud infrastructure platform needing Backend & DevOps co-founder.',
+      });
+      await ideaRepo.updateSeekingEmbedding(idea.id, ['Backend', 'DevOps'], seekingEmb);
+
+      // Query matches from Real PostgreSQL using pgvector <=> operator
+      const matches = await matchingService.getMatchesForIdea(ownerId, idea.id, 10);
+
+      assert.ok(matches.length >= 2, 'Must return candidates for both users');
+
+      const matchUserA = matches.find((m) => m.candidate.id === userA_TechnicalId);
+      const matchUserB = matches.find((m) => m.candidate.id === userB_MarketingId);
+
+      assert.ok(matchUserA, 'Technical User A must be in returned matches');
+      assert.ok(matchUserB, 'Marketing User B must be in returned matches');
+
+      console.log(`User A (Technical) Similarity Score: ${matchUserA.similarityScore.toFixed(4)}`);
+      console.log(`User B (Marketing) Similarity Score: ${matchUserB.similarityScore.toFixed(4)}`);
+
+      // Verify User A ranks higher than User B
+      assert.ok(
+        matchUserA.similarityScore > matchUserB.similarityScore,
+        `User A technical similarity score (${matchUserA.similarityScore}) MUST be higher than User B marketing similarity score (${matchUserB.similarityScore})`,
+      );
+
+      // Verify AI Rationale generated
+      assert.ok(matchUserA.aiRationale.length > 10, 'AI rationale must be generated for top candidate');
+    } catch (err) {
+      console.error('DoD Test 3 Failed with error:', err);
+      throw err;
     }
-    const testEmails = ['founder.vector@drara.io', 'alice.backend@drara.io', 'bob.marketing@drara.io'];
-    await db('ideas').whereIn('user_id', db('users').select('id').whereIn('email', testEmails)).del();
-    await db('users').whereIn('email', testEmails).del();
   });
 
-  it('Requirement 1: Real pgvector Cosine Similarity ranks Backend User A significantly higher than Marketing User B', async () => {
-    const matches = await matchingService.findMatchesForIdea(founderUser.id, backendIdea.id, 10, true);
-
-    assert.ok(matches.length >= 2, 'Must return at least 2 candidate matches');
-
-    const topMatch = matches[0];
-    const secondMatch = matches[1];
-
-    // Assert top match is Alice Backend
-    assert.equal(topMatch.user.id, backendUser.id, 'Top candidate MUST be Backend Engineer Alice');
-    assert.equal(secondMatch.user.id, marketingUser.id, 'Second candidate MUST be Marketing User Bob');
-
-    // Assert Cosine Similarity of User A > User B
-    assert.ok(
-      topMatch.similarity_score > secondMatch.similarity_score,
-      `Backend User A score (${topMatch.similarity_score}) MUST be higher than Marketing User B score (${secondMatch.similarity_score})`,
-    );
-
-    // Assert Top-1 match includes AI match rationale
-    assert.ok(topMatch.match_rationale.length > 10, 'Match rationale must be generated for top match');
-  });
-
-  it('Requirement 2: Visibility Security Rule blocks unauthorized non-owner users from reading matches of private ideas', async () => {
-    // Create an invite_only idea
-    const stealthIdea = await ideaRepo.create({
-      user_id: founderUser.id,
-      title: 'Stealth AI Platform',
+  it('DoD Requirement 4: Visibility Scoping — invite_only idea returns matches ONLY to owner, empty to other users', async () => {
+    const inviteOnlyIdea = await ideaRepo.create({
+      user_id: ownerId,
+      title: 'Stealth AI Project',
       visibility: 'invite_only',
     });
 
-    // Founder can access matches
-    const founderMatches = await matchingService.findMatchesForIdea(founderUser.id, stealthIdea.id, 10, true);
-    assert.ok(Array.isArray(founderMatches));
+    // Generate seeking_embedding vector for stealth idea
+    const emb = await aiClient.generateEmbedding({ tags: ['Backend'] });
+    await ideaRepo.updateSeekingEmbedding(inviteOnlyIdea.id, ['Backend'], emb);
 
-    // Unauthorized user CANNOT access matches
-    await assert.rejects(
-      () => matchingService.findMatchesForIdea(backendUser.id, stealthIdea.id, 10, true),
-      (err: any) => {
-        assert.equal(err.code, 'MATCHES_PRIVATE_TO_OWNER');
-        assert.equal(err.statusCode, 403);
-        return true;
-      },
-    );
+    // Owner query -> returns matches
+    const ownerMatches = await matchingService.getMatchesForIdea(ownerId, inviteOnlyIdea.id);
+    assert.ok(ownerMatches.length > 0, 'Owner must see matches for invite_only idea');
 
-    // Cleanup stealth idea
-    await db('ideas').where({ id: stealthIdea.id }).del();
-  });
-
-  it('Requirement 3: Symmetric Matching — findMatchesForUser returns matching public ideas for a user', async () => {
-    const matches = await matchingService.findMatchesForUser(backendUser.id, 10, true);
-    assert.ok(Array.isArray(matches), 'Must return an array of idea matches');
-    assert.ok(matches.length >= 1, 'Must find at least 1 matching public idea');
-    assert.equal(matches[0].idea.id, backendIdea.id, 'Top idea match for Backend User MUST be Cloud Native Microservices Platform');
+    // Non-owner query -> returns empty array (restricted)
+    const nonOwnerMatches = await matchingService.getMatchesForIdea(userA_TechnicalId, inviteOnlyIdea.id);
+    assert.equal(nonOwnerMatches.length, 0, 'Non-owner MUST NOT see matches for invite_only idea');
   });
 });

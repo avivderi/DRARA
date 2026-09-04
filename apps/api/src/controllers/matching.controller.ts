@@ -1,42 +1,36 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
-import { db } from '../db/connection';
-import { AppError } from '../lib/errors';
-import { KnexIdeaRepository } from '../repositories/idea.repository';
-import { KnexUserRepository } from '../repositories/user.repository';
-import { MatchingService } from '../services/matching.service';
+import { MatchingService, type MatchResult } from '../services/matching.service';
 
-export const matchingController = {
-  /** GET /ideas/:id/matches — returns embedding-based co-founder matches for an idea */
-  getMatchesForIdea: async (req: Request, res: Response): Promise<void> => {
-    const userId = req.userId;
-    if (!userId) throw AppError.unauthorized();
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
 
-    const ideaId = req.params['id'];
-    if (!ideaId) throw AppError.badRequest('Idea ID is required');
+export class MatchingController {
+  private readonly matchingService: MatchingService;
 
-    const forceRecompute = req.query['force'] === 'true';
+  constructor(matchingService: MatchingService) {
+    this.matchingService = matchingService;
+  }
 
-    const ideaRepo = new KnexIdeaRepository(db);
-    const userRepo = new KnexUserRepository(db);
-    const matchingService = new MatchingService(db, ideaRepo, userRepo);
+  getIdeaMatches = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const ideaId = req.params['id'];
+      if (!ideaId) {
+        res.status(400).json({ error: 'Missing idea ID' });
+        return;
+      }
 
-    const matches = await matchingService.findMatchesForIdea(userId, ideaId, 10, forceRecompute);
-    res.json(matches);
-  },
+      const authReq = req as AuthenticatedRequest;
+      const headerUserId = typeof req.headers['x-user-id'] === 'string' ? req.headers['x-user-id'] : undefined;
+      const userId = authReq.user?.id ?? headerUserId ?? 'anonymous';
+      const limitParam = typeof req.query['limit'] === 'string' ? req.query['limit'] : undefined;
+      const limit = limitParam ? parseInt(limitParam, 10) : 10;
 
-  /** GET /users/me/matches — returns embedding-based idea matches for a user */
-  getMatchesForUser: async (req: Request, res: Response): Promise<void> => {
-    const userId = req.userId;
-    if (!userId) throw AppError.unauthorized();
-
-    const forceRecompute = req.query['force'] === 'true';
-
-    const ideaRepo = new KnexIdeaRepository(db);
-    const userRepo = new KnexUserRepository(db);
-    const matchingService = new MatchingService(db, ideaRepo, userRepo);
-
-    const matches = await matchingService.findMatchesForUser(userId, 10, forceRecompute);
-    res.json(matches);
-  },
-};
+      const matches: MatchResult[] = await this.matchingService.getMatchesForIdea(userId, ideaId, limit);
+      res.json({ ideaId, count: matches.length, matches });
+    } catch (err: unknown) {
+      next(err as Error);
+    }
+  };
+}

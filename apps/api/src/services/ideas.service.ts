@@ -4,7 +4,7 @@ import { redisClient } from '../lib/redis';
 import type { ConnectedRepo, IConnectedRepoRepository } from '../repositories/connected-repo.repository.interface';
 import type { Idea, IdeaVisibility, IIdeaRepository } from '../repositories/idea.repository.interface';
 
-import type { AIServiceClient } from './ai-service.client';
+import { AIServiceClient } from './ai-service.client';
 
 const MAX_SCANS_PER_DAY = Number(process.env['MAX_SCANS_PER_DAY'] ?? 5);
 

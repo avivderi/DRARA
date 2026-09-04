@@ -4,7 +4,25 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": true
+    "project": [
+      "./apps/api/tsconfig.json",
+      "./apps/web/tsconfig.json",
+      "./apps/mobile/tsconfig.json",
+      "./packages/shared-types/tsconfig.json"
+    ],
+    "tsconfigRootDir": "/home/avivderi/שולחן העבודה/סטארטאפ"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": [
+          "./apps/api/tsconfig.json",
+          "./apps/web/tsconfig.json",
+          "./apps/mobile/tsconfig.json",
+          "./packages/shared-types/tsconfig.json"
+        ]
+      }
+    }
   },
   "plugins": ["@typescript-eslint", "import"],
   "extends": [
@@ -30,6 +48,8 @@
         }
       }
     ],
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
     "import/order": [
       "error",
       {
@@ -38,15 +58,14 @@
         "alphabetize": { "order": "asc" }
       }
     ],
-    "@typescript-eslint/no-namespace": "off",
-    "@typescript-eslint/no-unsafe-argument": "off",
-    "import/no-cycle": "off",
+    "import/no-cycle": "error",
     "import/namespace": "off"
   },
   "overrides": [
     {
-      "files": ["*.test.ts", "*.spec.ts", "**/migrations/*.ts", "**/scripts/*.ts"],
+      "files": ["*.test.ts", "*.spec.ts", "**/migrations/*.ts", "**/scripts/*.ts", "**/knexfile.ts"],
       "rules": {
+        "no-console": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
         "@typescript-eslint/no-unsafe-member-access": "off",
@@ -54,6 +73,22 @@
         "@typescript-eslint/no-unsafe-return": "off",
         "@typescript-eslint/no-unsafe-argument": "off",
         "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/explicit-function-return-type": "off"
+      }
+    },
+    {
+      "files": ["apps/api/src/db/**/*.ts"],
+      "rules": {
+        "import/default": "off",
+        "import/no-named-as-default-member": "off"
+      }
+    },
+    {
+      "files": ["apps/mobile/**/*.tsx", "apps/mobile/**/*.ts", "apps/web/**/*.tsx", "apps/web/**/*.ts"],
+      "rules": {
+        "import/default": "off",
+        "import/no-named-as-default": "off",
+        "import/no-named-as-default-member": "off",
         "@typescript-eslint/explicit-function-return-type": "off"
       }
     }

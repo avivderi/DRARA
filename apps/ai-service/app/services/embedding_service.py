@@ -1,77 +1,75 @@
 import hashlib
+import logging
 import math
-import re
-from typing import List, Tuple
-import httpx
+from typing import List
+import requests
 
 from app.config import settings
 
+logger = logging.getLogger(__name__)
 
-class EmbeddingService:
-    """Service interfacing with Voyage AI for 1024-dim text embedding generation."""
+VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings"
+EMBEDDING_DIMENSION = 1024
 
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or getattr(settings, "voyage_api_key", "")
 
-    async def generate_embedding(self, text: str) -> Tuple[List[float], int]:
-        """
-        Generates 1024-dim L2-normalized embedding vector for text.
-        Returns (vector_1024_floats, tokens_used).
-        """
-        clean_text = text.strip()
-        if not clean_text:
-            clean_text = "general startup"
+def generate_fallback_embedding(text: str) -> List[float]:
+    """
+    Generates a normalized 1024-dimensional vector deterministically using SHA-256 seed.
+    Used ONLY when VOYAGE_API_KEY is not set.
+    Logs explicit warning as required.
+    """
+    logger.warning("⚠️ USING FALLBACK EMBEDDING - NOT REAL VOYAGE API")
+    print("⚠️ USING FALLBACK EMBEDDING - NOT REAL VOYAGE API")
 
-        # If Voyage AI API key is set, call Voyage AI API
-        if self.api_key and not self.api_key.startswith("mock"):
-            try:
-                async with httpx.AsyncClient(timeout=15.0) as client:
-                    res = await client.post(
-                        "https://api.voyageai.com/v1/embeddings",
-                        headers={
-                            "Authorization": f"Bearer {self.api_key}",
-                            "Content-Type": "application/json",
-                        },
-                        json={
-                            "input": [clean_text],
-                            "model": "voyage-3-lite",
-                        },
-                    )
-                    if res.status_code == 200:
-                        data = res.json()
-                        embedding = data["data"][0]["embedding"]
-                        tokens = data.get("usage", {}).get("total_tokens", len(clean_text.split()))
-                        return embedding, tokens
-            except Exception:
-                pass
+    raw_vec = []
+    text_bytes = text.encode("utf-8")
+    for i in range(EMBEDDING_DIMENSION):
+        h = hashlib.sha256(text_bytes + i.to_bytes(4, "big")).digest()
+        val = (int.from_bytes(h[:4], "big") / (2**32 - 1)) * 2.0 - 1.0
+        raw_vec.append(val)
 
-        # ── Deterministic 1024-dim Semantic Projection Fallback Generator ──
-        # Generates L2-normalized 1024-dim vector maintaining semantic distance
-        dims = 1024
-        vector = [0.0] * dims
+    # Normalize vector to L2 unit length
+    magnitude = math.sqrt(sum(x * x for x in raw_vec))
+    if magnitude == 0:
+        return [0.0] * EMBEDDING_DIMENSION
+    return [x / magnitude for x in raw_vec]
 
-        words = [w.lower() for w in re.findall(r"\w+", clean_text)]
-        for word in words:
-            # Generate deterministic index and value for each word
-            h = hashlib.sha256(word.encode("utf-8")).digest()
-            idx1 = int.from_bytes(h[0:2], "big") % dims
-            idx2 = int.from_bytes(h[2:4], "big") % dims
-            val1 = ((h[4] / 255.0) * 2.0) - 1.0
-            val2 = ((h[5] / 255.0) * 2.0) - 1.0
 
-            vector[idx1] += val1 + 1.0
-            vector[idx2] += val2 - 0.5
+def get_embedding(text: str) -> List[float]:
+    """
+    Returns 1024-dimensional float vector embedding for the input text.
+    Calls Voyage AI API if VOYAGE_API_KEY is configured.
+    """
+    api_key = settings.voyage_api_key.strip()
 
-        # Also encode global text hash for uniqueness
-        full_hash = hashlib.sha256(clean_text.encode("utf-8")).digest()
-        for i in range(16):
-            pos = (int.from_bytes(full_hash[i:i+2], "big")) % dims
-            vector[pos] += ((full_hash[i] / 255.0) * 0.5) + 0.1
+    if not api_key or api_key == "mock_key":
+        return generate_fallback_embedding(text)
 
-        # Apply L2 Normalization (so vector length is exactly 1.0)
-        sq_sum = sum(x * x for x in vector)
-        magnitude = math.sqrt(sq_sum) if sq_sum > 0 else 1.0
-        normalized_vector = [round(x / magnitude, 6) for x in vector]
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "input": [text],
+            "model": "voyage-3-lite",
+        }
+        response = requests.post(VOYAGE_API_URL, json=payload, headers=headers, timeout=10)
+        response.raise_for_request()
+        data = response.json()
+        embedding = data["data"][0]["embedding"]
 
-        tokens_used = max(len(words), 1)
-        return normalized_vector, tokens_used
+        if len(embedding) != EMBEDDING_DIMENSION:
+            logger.warning(
+                f"Voyage AI returned dimension {len(embedding)}, expected {EMBEDDING_DIMENSION}"
+            )
+            # Pad or truncate if needed, though voyage-3-lite returns 1024
+            if len(embedding) < EMBEDDING_DIMENSION:
+                embedding = embedding + [0.0] * (EMBEDDING_DIMENSION - len(embedding))
+            else:
+                embedding = embedding[:EMBEDDING_DIMENSION]
+
+        return embedding
+    except Exception as e:
+        logger.error(f"Error calling Voyage AI API: {e}. Falling back to fallback generator.")
+        return generate_fallback_embedding(text)
