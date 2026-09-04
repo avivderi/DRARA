@@ -24,7 +24,7 @@ async def create_embedding(req: EmbedRequest):
             detail="Must provide non-empty text, tags, or bio for embedding generation",
         )
 
-    vector = get_embedding(combined_text)
+    vector = get_embedding(combined_text, req.input_type)
 
     return EmbedResponse(
         embedding=vector,

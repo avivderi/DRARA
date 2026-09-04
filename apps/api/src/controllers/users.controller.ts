@@ -63,7 +63,7 @@ export const usersController = {
         }
 
         if (offeringVector || seekingVector) {
-          await userRepo.updateEmbeddings(userId, offeringVector, seekingVector);
+          await userRepo.update(userId, { offering_embedding: offeringVector, seeking_embedding: seekingVector });
         }
       } catch (err) {
         // Non-blocking embedding update failure log

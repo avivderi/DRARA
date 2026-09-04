@@ -63,7 +63,12 @@ export class AIServiceClient {
     }
   }
 
-  async generateEmbedding(payload: { text?: string; tags?: string[]; bio?: string }): Promise<number[]> {
+  async generateEmbedding(payload: {
+    text?: string;
+    tags?: string[];
+    bio?: string;
+    input_type?: 'query' | 'document';
+  }): Promise<number[]> {
     try {
       const response = await fetch(`${this.baseUrl}/embed`, {
         method: 'POST',

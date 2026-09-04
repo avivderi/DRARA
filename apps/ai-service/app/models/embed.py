@@ -6,6 +6,7 @@ class EmbedRequest(BaseModel):
     text: Optional[str] = Field(None, description="Raw text string to embed")
     tags: Optional[List[str]] = Field(default=[], description="List of skill/domain tags")
     bio: Optional[str] = Field(None, description="Optional bio or description")
+    input_type: Optional[str] = Field(None, description="Voyage AI input_type: 'query' or 'document'")
 
 
 class EmbedResponse(BaseModel):

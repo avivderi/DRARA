@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import math
-from typing import List
+from typing import List, Optional
 import requests
 
 from app.config import settings
@@ -35,10 +35,11 @@ def generate_fallback_embedding(text: str) -> List[float]:
     return [x / magnitude for x in raw_vec]
 
 
-def get_embedding(text: str) -> List[float]:
+def get_embedding(text: str, input_type: Optional[str] = "document") -> List[float]:
     """
     Returns 1024-dimensional float vector embedding for the input text.
     Calls Voyage AI API if VOYAGE_API_KEY is configured.
+    Supports input_type ('document' or 'query').
     """
     api_key = settings.voyage_api_key.strip()
 
@@ -54,8 +55,11 @@ def get_embedding(text: str) -> List[float]:
             "input": [text],
             "model": "voyage-3-lite",
         }
+        if input_type in ("query", "document"):
+            payload["input_type"] = input_type
+
         response = requests.post(VOYAGE_API_URL, json=payload, headers=headers, timeout=10)
-        response.raise_for_request()
+        response.raise_for_status()
         data = response.json()
         embedding = data["data"][0]["embedding"]
 
@@ -63,7 +67,6 @@ def get_embedding(text: str) -> List[float]:
             logger.warning(
                 f"Voyage AI returned dimension {len(embedding)}, expected {EMBEDDING_DIMENSION}"
             )
-            # Pad or truncate if needed, though voyage-3-lite returns 1024
             if len(embedding) < EMBEDDING_DIMENSION:
                 embedding = embedding + [0.0] * (EMBEDDING_DIMENSION - len(embedding))
             else:

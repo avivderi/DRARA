@@ -6,6 +6,7 @@ import { AppError } from './lib/errors';
 import { logger } from './lib/logger';
 import { authRouter } from './routes/auth.routes';
 import { githubRouter } from './routes/github.routes';
+import { handshakeRouter } from './routes/handshake.routes';
 import { ideasRouter } from './routes/ideas.routes';
 import { matchingRouter } from './routes/matching.routes';
 import { sessionRouter } from './routes/session.routes';
@@ -43,6 +44,7 @@ export function createApp(): Application {
   app.use('/session', sessionRouter);
   app.use('/ideas', ideasRouter);
   app.use('/github', githubRouter);
+  app.use('/handshake', handshakeRouter);
   app.use('/', matchingRouter);
 
   // ── 404 handler ──────────────────────────────────────────

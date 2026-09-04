@@ -62,11 +62,13 @@ describe('Module 3 Integration Verification: Real pgvector Matching & Visibility
     const embA = await aiClient.generateEmbedding({
       tags: ['Backend', 'DevOps', 'AWS'],
       bio: 'Senior Cloud Infrastructure Engineer with Go, Python, and Kubernetes expert skills.',
+      input_type: 'document',
     });
 
     const embB = await aiClient.generateEmbedding({
       tags: ['Marketing', 'Sales', 'Content'],
       bio: 'Growth Marketer, SEO Specialist, Brand Manager, and Sales Strategist.',
+      input_type: 'document',
     });
 
     // 4. Save offering_embedding vectors to Real Postgres DB
@@ -103,6 +105,7 @@ describe('Module 3 Integration Verification: Real pgvector Matching & Visibility
       const seekingEmb = await aiClient.generateEmbedding({
         tags: ['Backend', 'DevOps'],
         text: 'Distributed Cloud Microservices Platform | High throughput cloud infrastructure platform needing Backend & DevOps co-founder.',
+        input_type: 'query',
       });
       await ideaRepo.updateSeekingEmbedding(idea.id, ['Backend', 'DevOps'], seekingEmb);
 
