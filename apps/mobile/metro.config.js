@@ -1,11 +1,21 @@
 const { getDefaultConfig } = require('expo/metro-config');
 
-const defaultConfig = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
 
-defaultConfig.resolver.extraNodeModules = {
-  ...defaultConfig.resolver.extraNodeModules,
-  crypto: require.resolve('crypto-browserify'),
-  stream: require.resolve('stream-browserify'),
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'crypto') {
+    return {
+      filePath: require.resolve('crypto-browserify'),
+      type: 'sourceFile',
+    };
+  }
+  if (moduleName === 'stream') {
+    return {
+      filePath: require.resolve('stream-browserify'),
+      type: 'sourceFile',
+    };
+  }
+  return context.resolveRequest(context, moduleName, platform);
 };
 
-module.exports = defaultConfig;
+module.exports = config;

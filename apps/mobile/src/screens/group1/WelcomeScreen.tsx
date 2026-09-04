@@ -7,9 +7,8 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
-import Svg, { Circle, Path, G } from 'react-native-svg';
-
 import { colors, fonts } from '../../theme/tokens';
+
 
 interface WelcomeScreenProps {
   onGoogleSignIn: () => void;
@@ -33,27 +32,13 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
         {/* Minimal Vector Illustration */}
         <View style={styles.illustrationContainer}>
-          <Svg width={180} height={180} viewBox="0 0 200 200" fill="none">
-            <Circle cx="100" cy="100" r="82" stroke={colors.border} strokeWidth="1" strokeDasharray="3 4" opacity={0.45} />
-            <Path d="M 52 118 C 76 68, 124 136, 148 82" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" />
-            <Path d="M 64 122 C 86 90, 114 110, 136 78" stroke={colors.primary} strokeWidth="1" opacity={0.25} strokeLinecap="round" />
-            
-            {/* Node 1: Origin */}
-            <G>
-              <Circle cx="148" cy="82" r="14" fill={colors.surface} stroke={colors.primary} strokeWidth="2" />
-              <Circle cx="148" cy="82" r="5" fill={colors.primary} />
-            </G>
-
-            {/* Node 2: Partner */}
-            <G>
-              <Circle cx="52" cy="118" r="14" fill={colors.surface} stroke={colors.primary} strokeWidth="2" />
-              <Circle cx="52" cy="118" r="5" fill={colors.primary} />
-            </G>
-
-            {/* Synergy Node */}
-            <Circle cx="104" cy="98" r="3" fill={colors.accentPoint} />
-          </Svg>
+          <View style={styles.outerCircle}>
+            <View style={styles.innerCircle1} />
+            <View style={styles.innerCircle2} />
+            <View style={styles.synergyDot} />
+          </View>
         </View>
+
 
         {/* Headline & Description */}
         <View style={styles.textContainer}>
@@ -134,6 +119,44 @@ const styles = StyleSheet.create({
     marginVertical: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  outerCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  innerCircle1: {
+    position: 'absolute',
+    left: 10,
+    top: 30,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  innerCircle2: {
+    position: 'absolute',
+    right: 10,
+    bottom: 30,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  synergyDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.accentPoint,
   },
   textContainer: {
     alignItems: 'center',
