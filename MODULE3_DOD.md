@@ -44,12 +44,11 @@ Module 3 מיישם מנוע מאצ'ינג סמנטי המשתמש ב-pgvector �
 - [x] **אימות אמינות ומנגנון Resilience**:
   - בהרצת טסטים מהירים ורציפים החורגים מ-3 RPM, המערכת תופסת `HTTP 429` ונופלת בצורה בטוחה ל-Fallback דטרמיניסטי (SHA-256), השומר על פעילות המערכת ועל אכיפת Visibility Scoping.
 
-### 📦 Voyage AI Integration
-- [x] אינטגרציה מלאה מול Voyage AI API (`input_type` נתמך ומטופל ב-API Payload, מנגנון Fallback פעיל למניעת נפילות ב-Rate Limit).
-
-
-
+### 🛠️ Technical Debt & Follow-up TODOs
+- [ ] **אופטימיזציית מימדי ה-Vector (512 vs 1024)**: המודל `voyage-3-lite` מחזיר וקטורים ב-512 מימדים בעוד ה-DB schema הוגדר כ-`vector(1024)` (ורופד באפסים). מתמטית הריפוד הסימטרי אינו פוגע ב-cosine similarity, אך מומלץ לשקול צמצום ה-schema ל-`vector(512)` לחיסכון במקום ואופטימיזציית חישוב, או לעבור למודל Voyage מלא (1024D) במידה ונדרש עומק סמנטי גבוה יותר.
+- [ ] **תיקון Unit Test ל-`ideas.service.test.ts`**: הטסט `scanIdea invokes AI client` מנסה לגשת ל-Redis בלתי מאותחל בסביבת Unit Test בודדת (ללא Mock). מומלץ להוסיף Mock ל-Redis Client בסביבת היחידה הזו.
 
 ---
 
 *Module 3 נסגר ✅ — merged to main via `6d53c7f`*
+
