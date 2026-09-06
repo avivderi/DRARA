@@ -10,7 +10,7 @@
       "./apps/mobile/tsconfig.json",
       "./packages/shared-types/tsconfig.json"
     ],
-    "tsconfigRootDir": "/home/avivderi/שולחן העבודה/סטארטאפ"
+    "tsconfigRootDir": "."
   },
   "settings": {
     "import/resolver": {
