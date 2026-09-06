@@ -72,6 +72,9 @@ export class HandshakeService {
       throw new Error('Invalid challenge token format');
     }
     const [dataStr, signature] = parts;
+    if (!dataStr || !signature) {
+      throw new Error('Invalid challenge token format');
+    }
     const expectedSignature = crypto
       .createHmac('sha256', HANDSHAKE_SECRET)
       .update(dataStr)

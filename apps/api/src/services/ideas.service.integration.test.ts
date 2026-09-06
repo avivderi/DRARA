@@ -84,7 +84,7 @@ describe('Module 2 Integration Tests: Real AI Scan & Real Redis Rate Limiting', 
     assert.ok(Array.isArray(scanned.stack_detected), 'Stack detected must be an array');
     const scoreNum = Number(scanned.readiness_score);
     assert.ok(scoreNum >= 1 && scoreNum <= 10, 'Readiness score must be between 1 and 10');
-    assert.ok(scanned.readiness_rationale.length > 0, 'Readiness rationale must be populated');
+    assert.ok(scanned.readiness_rationale && scanned.readiness_rationale.length > 0, 'Readiness rationale must be populated');
     assert.ok(scanned.last_scanned_at, 'last_scanned_at timestamp must be updated in Postgres');
 
     // Verify DB record directly

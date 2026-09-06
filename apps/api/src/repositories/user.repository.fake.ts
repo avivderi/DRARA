@@ -19,7 +19,7 @@ export class FakeUserRepository implements IUserRepository {
       id: randomUUID(),
       name: input.name,
       email: input.email,
-      avatar_url: input.avatar_url,
+      avatar_url: input.avatar_url ?? null,
       provider: input.provider,
       provider_id: input.provider_id,
       github_username: input.githubUsername ?? null,

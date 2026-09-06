@@ -46,14 +46,11 @@ export class FakeMatchRepository implements IMatchRepository {
   }
 
   async updateStatus(id: string, status: MatchStatus): Promise<Match | null> {
-    const index = this.matches.findIndex((m) => m.id === id);
-    if (index === -1) return null;
+    const existing = this.matches.find((m) => m.id === id);
+    if (!existing) return null;
 
-    this.matches[index] = {
-      ...this.matches[index],
-      status,
-      updated_at: new Date(),
-    };
-    return { ...this.matches[index] };
+    existing.status = status;
+    existing.updated_at = new Date();
+    return { ...existing };
   }
 }

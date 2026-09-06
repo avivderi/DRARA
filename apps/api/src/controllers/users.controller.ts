@@ -76,8 +76,8 @@ export const usersController = {
       offering_tags: user.offering_tags ?? [],
       seeking_tags: user.seeking_tags ?? [],
       bio: user.bio ?? null,
-      headline: (user as Record<string, unknown>)['headline'] ?? null,
-      availability_hours_per_week: (user as Record<string, unknown>)['availability_hours_per_week'] ?? null,
+      headline: (user as unknown as Record<string, unknown>)['headline'] ?? null,
+      availability_hours_per_week: (user as unknown as Record<string, unknown>)['availability_hours_per_week'] ?? null,
     });
   },
 

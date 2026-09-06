@@ -23,7 +23,8 @@ export interface User {
   updated_at: Date;
 }
 
-export type CreateUserInput = Pick<User, 'name' | 'email' | 'avatar_url' | 'provider' | 'provider_id'> & {
+export type CreateUserInput = Pick<User, 'name' | 'email' | 'provider' | 'provider_id'> & {
+  avatar_url?: string | null;
   githubUsername?: string;
 };
 

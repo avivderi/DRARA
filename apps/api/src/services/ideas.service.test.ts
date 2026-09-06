@@ -61,7 +61,7 @@ describe('IdeasService Unit Tests', () => {
 
     const scanned = await ideasService.scanIdea('user_1', idea.id, true);
 
-    assert.ok(scanned.ai_summary.includes('DRARA'));
+    assert.ok(scanned.ai_summary?.includes('DRARA'));
     assert.deepEqual(scanned.stack_detected, ['TypeScript', 'FastAPI']);
     assert.equal(scanned.readiness_score, 8);
     assert.equal(mockAiClient.scanCallCount, 1);

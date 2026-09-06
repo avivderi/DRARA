@@ -162,6 +162,6 @@ describe('Module 5 Integration Tests (Live PostgreSQL DB)', () => {
     const msgNotif = notifs.notifications.find((n) => n.type === 'new_message');
     assert.ok(msgNotif);
     assert.equal(msgNotif.user_id, testUserAId);
-    assert.ok(msgNotif.payload.content_preview);
+    assert.ok(msgNotif.payload['content_preview']);
   });
 });

@@ -64,7 +64,9 @@ export class IdeasService {
         installation_id: installationId,
       });
     } else {
-      repo = await this.connectedRepoRepo.linkToIdea(repo.id, ideaId);
+      const updated = await this.connectedRepoRepo.linkToIdea(repo.id, ideaId);
+      if (!updated) throw AppError.internal('Failed to link repository');
+      repo = updated;
     }
     return repo;
   }

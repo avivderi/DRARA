@@ -9,7 +9,7 @@ export class NotificationRepository implements INotificationRepository {
   constructor(private db: Knex) {}
 
   async create(userId: string, type: string, payload: Record<string, unknown>): Promise<NotificationRecord> {
-    const rows = await this.db<NotificationRecord>('notifications')
+    const rows = await this.db('notifications')
       .insert({
         user_id: userId,
         type,
@@ -17,7 +17,7 @@ export class NotificationRepository implements INotificationRepository {
       })
       .returning('*');
 
-    const row = rows[0];
+    const row = rows[0] as unknown as NotificationRecord | undefined;
     if (!row) throw new Error('Failed to create notification');
     return row;
   }

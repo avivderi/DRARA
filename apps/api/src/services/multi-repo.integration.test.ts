@@ -64,11 +64,11 @@ describe('Multi-Repo Integration Verification: Distinct Repository AI Analysis',
     // 3. Execute Scan
     const scanResult1 = await ideasService.scanIdea(testUserId, idea1.id, true);
 
-    // 4. Assert specific content & Vue stack
+    const summary1 = scanResult1.ai_summary?.toLowerCase() ?? '';
     assert.ok(
-      scanResult1.ai_summary.toLowerCase().includes('pasta') ||
-        scanResult1.ai_summary.toLowerCase().includes('recipe') ||
-        scanResult1.ai_summary.toLowerCase().includes('culinary'),
+      summary1.includes('pasta') ||
+        summary1.includes('recipe') ||
+        summary1.includes('culinary'),
       'AI summary must specifically mention Italian pasta / culinary recipes domain',
     );
     assert.ok(
@@ -98,11 +98,12 @@ describe('Multi-Repo Integration Verification: Distinct Repository AI Analysis',
     const scanResult2 = await ideasService.scanIdea(testUserId, idea2.id, true);
 
     // 4. Assert specific content & Go stack
+    const summary2 = scanResult2.ai_summary?.toLowerCase() ?? '';
     assert.ok(
-      scanResult2.ai_summary.toLowerCase().includes('e-commerce') ||
-        scanResult2.ai_summary.toLowerCase().includes('trading') ||
-        scanResult2.ai_summary.toLowerCase().includes('engine') ||
-        scanResult2.ai_summary.toLowerCase().includes('order'),
+      summary2.includes('e-commerce') ||
+        summary2.includes('trading') ||
+        summary2.includes('engine') ||
+        summary2.includes('order'),
       'AI summary must specifically mention Go / E-Commerce trading engine domain',
     );
     assert.ok(
