@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 6 (Workspace & Partnerships)
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
 import { BrandHeader } from '../../components/layout/headers/BrandHeader';
+import { apiClient } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface PartnershipItem {
@@ -57,12 +57,55 @@ const SAMPLE_PARTNERSHIPS: PartnershipItem[] = [
 ];
 
 export const PartnershipsScreen: React.FC<PartnershipsScreenProps> = ({
-  partnerships = SAMPLE_PARTNERSHIPS,
+  partnerships: initialPartnerships,
   onSelectPartnership,
   onNavigateTab,
   onNotificationsPress,
   onProfilePress,
 }) => {
+  const [partnershipsData, setPartnershipsData] = useState<PartnershipItem[]>(
+    initialPartnerships ?? SAMPLE_PARTNERSHIPS,
+  );
+
+  useEffect(() => {
+    if (!initialPartnerships) {
+      let isMounted = true;
+      apiClient
+        .get<Record<string, unknown>>('/workspaces')
+        .then((res) => {
+          if (!isMounted) return;
+          const raw = res?.['data'] ?? res;
+          if (Array.isArray(raw) && raw.length > 0) {
+            setPartnershipsData(
+              raw.map((item: unknown) => {
+                const w = item as Record<string, unknown>;
+                return {
+                  id: String(w['id'] ?? 'p'),
+                  ideaTitle: String(w['idea_title'] ?? w['title'] ?? 'Co-Founder Partnership'),
+                  tagline: String(w['tagline'] ?? w['description'] ?? 'מיזם משותף פעיל'),
+                  partnerName: String(w['partner_name'] ?? 'אלון מזרחי'),
+                  partnerAvatar: String(w['partner_avatar'] ?? SAMPLE_PARTNERSHIPS[0].partnerAvatar),
+                  myAvatar: String(w['my_avatar'] ?? SAMPLE_PARTNERSHIPS[0].myAvatar),
+                  handshakeDate: typeof w['created_at'] === 'string'
+                    ? new Date(w['created_at']).toLocaleDateString('he-IL')
+                    : '2026',
+                  isConfirmed: true,
+                };
+              }),
+            );
+          }
+        })
+        .catch(() => {
+          // Keep sample partnerships fallback on network error
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [initialPartnerships]);
+
+  const partnerships = partnershipsData;
   return (
     <SafeAreaView style={styles.safeArea}>
       <BrandHeader

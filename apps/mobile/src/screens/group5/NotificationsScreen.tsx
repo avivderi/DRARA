@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
@@ -34,29 +33,37 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
   onSelectNotification,
 }) => {
   const [notifList, setNotifList] = useState<AppNotification[]>(propNotifications || []);
-  const [loading, setLoading] = useState(!propNotifications);
 
   useEffect(() => {
     if (!propNotifications) {
-      setLoading(true);
-      apiGet<{ notifications: any[] }>('/notifications')
+      apiGet<Record<string, unknown>>('/notifications')
         .then((res) => {
-          if (Array.isArray(res.notifications)) {
-            const mapped = res.notifications.map((n: any) => ({
-              id: n.id,
-              title: n.title || 'התראת מערכת',
-              body: n.body || n.content || '',
-              timestamp: n.created_at ? new Date(n.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : 'חדש',
-              type: n.type || 'system',
-              isRead: Boolean(n.read_at || n.is_read || n.isRead),
-            }));
+          const notifications = res['notifications'];
+          if (Array.isArray(notifications)) {
+            const mapped = notifications.map((item: unknown) => {
+              const n = item as Record<string, unknown>;
+              const rawType = String(n['type'] ?? 'system');
+              const notifType: 'match' | 'handshake' | 'system' =
+                rawType === 'match' || rawType === 'handshake' ? rawType : 'system';
+              return {
+                id: String(n['id'] ?? ''),
+                title: String(n['title'] ?? 'התראת מערכת'),
+                body: String(n['body'] ?? n['content'] ?? ''),
+                timestamp: typeof n['created_at'] === 'string'
+                  ? new Date(n['created_at']).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                  : 'חדש',
+                type: notifType,
+                isRead: Boolean(n['read_at'] ?? n['is_read'] ?? n['isRead']),
+              };
+            });
             setNotifList(mapped);
           }
         })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+        .catch(() => {
+          // Keep default fallback
+        });
     }
-  }, []);
+  }, [propNotifications]);
 
   const handleSelect = (n: AppNotification) => {
     if (!n.isRead) {

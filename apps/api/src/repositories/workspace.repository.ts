@@ -17,23 +17,23 @@ export class KnexWorkspaceRepository implements IWorkspaceRepository {
   constructor(private readonly knex: Knex) {}
 
   async findById(id: string): Promise<Workspace | null> {
-    const row = await this.knex('workspaces').where({ id }).first();
-    return row ? (row as Workspace) : null;
+    const row = await this.knex<Workspace>('workspaces').where({ id }).first();
+    return row ?? null;
   }
 
   async findByMatchId(matchId: string): Promise<Workspace | null> {
-    const row = await this.knex('workspaces').where({ match_id: matchId }).first();
-    return row ? (row as Workspace) : null;
+    const row = await this.knex<Workspace>('workspaces').where({ match_id: matchId }).first();
+    return row ?? null;
   }
 
   async create(data: { match_id: string; project_name?: string }): Promise<Workspace> {
-    const [row] = await this.knex('workspaces')
+    const rows = await this.knex<Workspace>('workspaces')
       .insert({
         match_id: data.match_id,
         project_name: data.project_name || 'Co-Founding Workspace',
       })
       .returning('*');
-    return row as Workspace;
+    return rows[0]!;
   }
 }
 
@@ -41,10 +41,9 @@ export class KnexIdeaBoardRepository implements IIdeaBoardRepository {
   constructor(private readonly knex: Knex) {}
 
   async getEntries(workspaceId: string): Promise<IdeaBoardEntry[]> {
-    const rows = await this.knex('idea_board_entries')
+    return this.knex<IdeaBoardEntry>('idea_board_entries')
       .where({ workspace_id: workspaceId })
       .orderBy('created_at', 'asc');
-    return rows as IdeaBoardEntry[];
   }
 
   async upsertEntry(
@@ -53,12 +52,12 @@ export class KnexIdeaBoardRepository implements IIdeaBoardRepository {
     content: string,
     updatedBy?: string,
   ): Promise<IdeaBoardEntry> {
-    const existing = await this.knex('idea_board_entries')
+    const existing = await this.knex<IdeaBoardEntry>('idea_board_entries')
       .where({ workspace_id: workspaceId, section })
       .first();
 
     if (existing) {
-      const [updated] = await this.knex('idea_board_entries')
+      const rows = await this.knex<IdeaBoardEntry>('idea_board_entries')
         .where({ id: existing.id })
         .update({
           content,
@@ -66,10 +65,10 @@ export class KnexIdeaBoardRepository implements IIdeaBoardRepository {
           updated_at: new Date(),
         })
         .returning('*');
-      return updated as IdeaBoardEntry;
+      return rows[0]!;
     }
 
-    const [created] = await this.knex('idea_board_entries')
+    const rows = await this.knex<IdeaBoardEntry>('idea_board_entries')
       .insert({
         workspace_id: workspaceId,
         section,
@@ -77,7 +76,7 @@ export class KnexIdeaBoardRepository implements IIdeaBoardRepository {
         updated_by: updatedBy || null,
       })
       .returning('*');
-    return created as IdeaBoardEntry;
+    return rows[0]!;
   }
 }
 
@@ -85,15 +84,14 @@ export class KnexRoadmapRepository implements IRoadmapRepository {
   constructor(private readonly knex: Knex) {}
 
   async getMilestones(workspaceId: string): Promise<RoadmapMilestone[]> {
-    const rows = await this.knex('roadmap_milestones')
+    return this.knex<RoadmapMilestone>('roadmap_milestones')
       .where({ workspace_id: workspaceId })
       .orderBy('created_at', 'asc');
-    return rows as RoadmapMilestone[];
   }
 
   async findById(id: string): Promise<RoadmapMilestone | null> {
-    const row = await this.knex('roadmap_milestones').where({ id }).first();
-    return row ? (row as RoadmapMilestone) : null;
+    const row = await this.knex<RoadmapMilestone>('roadmap_milestones').where({ id }).first();
+    return row ?? null;
   }
 
   async createMilestone(data: {
@@ -105,7 +103,7 @@ export class KnexRoadmapRepository implements IRoadmapRepository {
     assigned_to?: string;
     created_by?: string;
   }): Promise<RoadmapMilestone> {
-    const [row] = await this.knex('roadmap_milestones')
+    const rows = await this.knex<RoadmapMilestone>('roadmap_milestones')
       .insert({
         workspace_id: data.workspace_id,
         title: data.title,
@@ -116,7 +114,7 @@ export class KnexRoadmapRepository implements IRoadmapRepository {
         created_by: data.created_by || null,
       })
       .returning('*');
-    return row as RoadmapMilestone;
+    return rows[0]!;
   }
 
   async updateMilestone(
@@ -136,12 +134,12 @@ export class KnexRoadmapRepository implements IRoadmapRepository {
     if (data.status !== undefined) updateData['status'] = data.status;
     if (data.assigned_to !== undefined) updateData['assigned_to'] = data.assigned_to;
 
-    const [row] = await this.knex('roadmap_milestones')
+    const rows = await this.knex<RoadmapMilestone>('roadmap_milestones')
       .where({ id })
       .update(updateData)
       .returning('*');
 
-    return row ? (row as RoadmapMilestone) : null;
+    return rows[0] ?? null;
   }
 }
 
@@ -149,10 +147,9 @@ export class KnexDecisionRepository implements IDecisionRepository {
   constructor(private readonly knex: Knex) {}
 
   async getDecisions(workspaceId: string): Promise<DecisionEntry[]> {
-    const rows = await this.knex('decisions')
+    return this.knex<DecisionEntry>('decisions')
       .where({ workspace_id: workspaceId })
       .orderBy('created_at', 'desc');
-    return rows as DecisionEntry[];
   }
 
   async createDecision(data: {
@@ -161,7 +158,7 @@ export class KnexDecisionRepository implements IDecisionRepository {
     rationale: string;
     decided_by?: string;
   }): Promise<DecisionEntry> {
-    const [row] = await this.knex('decisions')
+    const rows = await this.knex<DecisionEntry>('decisions')
       .insert({
         workspace_id: data.workspace_id,
         title: data.title,
@@ -169,7 +166,7 @@ export class KnexDecisionRepository implements IDecisionRepository {
         decided_by: data.decided_by || null,
       })
       .returning('*');
-    return row as DecisionEntry;
+    return rows[0]!;
   }
 }
 
@@ -177,21 +174,20 @@ export class KnexEquityRepository implements IEquityRepository {
   constructor(private readonly knex: Knex) {}
 
   async getTopics(workspaceId: string): Promise<EquityTopic[]> {
-    const rows = await this.knex('equity_discussion_topics')
+    return this.knex<EquityTopic>('equity_discussion_topics')
       .where({ workspace_id: workspaceId })
       .orderBy('created_at', 'asc');
-    return rows as EquityTopic[];
   }
 
   async upsertTopic(workspaceId: string, topic: string, discussed: boolean): Promise<EquityTopic> {
-    const existing = await this.knex('equity_discussion_topics')
+    const existing = await this.knex<EquityTopic>('equity_discussion_topics')
       .where({ workspace_id: workspaceId, topic })
       .first();
 
     const discussedAt = discussed ? new Date() : null;
 
     if (existing) {
-      const [updated] = await this.knex('equity_discussion_topics')
+      const rows = await this.knex<EquityTopic>('equity_discussion_topics')
         .where({ id: existing.id })
         .update({
           discussed,
@@ -199,10 +195,10 @@ export class KnexEquityRepository implements IEquityRepository {
           updated_at: new Date(),
         })
         .returning('*');
-      return updated as EquityTopic;
+      return rows[0]!;
     }
 
-    const [created] = await this.knex('equity_discussion_topics')
+    const rows = await this.knex<EquityTopic>('equity_discussion_topics')
       .insert({
         workspace_id: workspaceId,
         topic,
@@ -210,6 +206,6 @@ export class KnexEquityRepository implements IEquityRepository {
         discussed_at: discussedAt,
       })
       .returning('*');
-    return created as EquityTopic;
+    return rows[0]!;
   }
 }

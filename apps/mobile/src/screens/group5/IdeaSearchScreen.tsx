@@ -1,4 +1,3 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 const POPULAR_TAGS = ['Backend', 'DevOps', 'AI / ML', 'React Native', 'FinTech', 'Python', 'B2B Sales'];
@@ -19,6 +19,7 @@ interface IdeaSearchScreenProps {
   onBackPress: () => void;
   onSearchSubmit: (query: string, selectedTags: string[]) => void;
 }
+
 
 export const IdeaSearchScreen: React.FC<IdeaSearchScreenProps> = ({
   onBackPress,
@@ -36,8 +37,11 @@ export const IdeaSearchScreen: React.FC<IdeaSearchScreenProps> = ({
   };
 
   const handleSearch = () => {
+    const tagsParam = selectedTags.join(',');
+    apiGet(`/ideas/public/search?q=${encodeURIComponent(query.trim())}&tags=${encodeURIComponent(tagsParam)}`).catch(() => {});
     onSearchSubmit(query.trim(), selectedTags);
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

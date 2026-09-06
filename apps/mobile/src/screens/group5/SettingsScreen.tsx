@@ -1,4 +1,3 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiClient } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 interface SettingsScreenProps {
@@ -24,6 +24,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [nfcAutoPairing, setNfcAutoPairing] = useState(true);
+
+  const handleLogoutPress = async () => {
+    try {
+      await apiClient.post('/auth/logout');
+    } catch {
+      // Ignore network errors during logout
+    }
+    onLogout();
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -65,7 +74,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <Text style={styles.infoText}>אבטחת אימות: HMAC-SHA256 Challenge/Response</Text>
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={() => { void handleLogoutPress(); }} activeOpacity={0.8}>
           <Text style={styles.logoutBtnText}>🚪 התנתקות מהחשבון</Text>
         </TouchableOpacity>
       </ScrollView>

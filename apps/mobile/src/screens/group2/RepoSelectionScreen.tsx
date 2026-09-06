@@ -11,9 +11,9 @@ import {
 
 import { WizardFooter } from '../../components/layout/footers/WizardFooter';
 import { WizardHeader } from '../../components/layout/headers/WizardHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
-import { apiGet } from '../../services/apiClient';
 
 export interface GitHubRepoItem {
   fullName: string; // e.g. "avivderi/DRARA"

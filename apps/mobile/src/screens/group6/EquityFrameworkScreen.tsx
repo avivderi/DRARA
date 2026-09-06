@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 6 (Workspace)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
 
 import { WorkspaceSubNav, WorkspaceTabType } from '../../components/layout/footers/WorkspaceSubNav';
 import { WorkspaceHeader } from '../../components/layout/headers/WorkspaceHeader';
+import { apiClient } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface EquitySplit {
@@ -20,6 +20,7 @@ export interface EquitySplit {
 }
 
 interface EquityFrameworkScreenProps {
+  workspaceId?: string;
   ideaTitle?: string;
   partnerName?: string;
   equitySplit?: EquitySplit;
@@ -35,13 +36,44 @@ const DEFAULT_EQUITY: EquitySplit = {
 };
 
 export const EquityFrameworkScreen: React.FC<EquityFrameworkScreenProps> = ({
+  workspaceId,
   ideaTitle = 'DRARA - Co-Founder Platform',
   partnerName = 'אלון מזרחי',
-  equitySplit = DEFAULT_EQUITY,
+  equitySplit: initialEquity = DEFAULT_EQUITY,
   onBackPress,
   onNavigateSubTab,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<WorkspaceTabType>('decisions');
+  const [equity, setEquity] = useState<EquitySplit>(initialEquity);
+
+  useEffect(() => {
+    if (workspaceId) {
+      let isMounted = true;
+      apiClient
+        .get<Record<string, unknown>>(`/workspaces/${workspaceId}/equity`)
+        .then((res) => {
+          if (!isMounted) return;
+          const data = (res?.['data'] ?? res) as Record<string, unknown>;
+          if (data) {
+            setEquity({
+              mySharePercent: typeof data['my_share_percent'] === 'number' ? data['my_share_percent'] : 50,
+              partnerSharePercent: typeof data['partner_share_percent'] === 'number' ? data['partner_share_percent'] : 50,
+              vestingYears: typeof data['vesting_years'] === 'number' ? data['vesting_years'] : 4,
+              cliffMonths: typeof data['cliff_months'] === 'number' ? data['cliff_months'] : 12,
+            });
+          }
+        })
+        .catch(() => {
+          // Keep default fallback on network error
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [workspaceId]);
+
+  const equitySplit = equity;
 
   const handleSubTabChange = (tab: WorkspaceTabType) => {
     setActiveSubTab(tab);

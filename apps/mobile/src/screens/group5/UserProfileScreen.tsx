@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiClient } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface UserProfileData {
@@ -49,12 +49,46 @@ const DEFAULT_PROFILE: UserProfileData = {
 };
 
 export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
-  profile = DEFAULT_PROFILE,
+  profile: initialProfile,
   activeTab = 'profile',
   onTabPress,
   onEditProfile,
   onOpenSettings,
 }) => {
+  const [profileData, setProfileData] = useState<UserProfileData>(initialProfile ?? DEFAULT_PROFILE);
+
+  useEffect(() => {
+    if (!initialProfile) {
+      let isMounted = true;
+      apiClient
+        .get<Record<string, unknown>>('/users/me')
+        .then((res) => {
+          if (!isMounted) return;
+          const user = (res?.['data'] ?? res) as Record<string, unknown>;
+          setProfileData({
+            name: typeof user['name'] === 'string' ? user['name'] : DEFAULT_PROFILE.name,
+            avatarUrl: typeof user['avatar_url'] === 'string' ? user['avatar_url'] : DEFAULT_PROFILE.avatarUrl,
+            headline: typeof user['headline'] === 'string' ? user['headline'] : DEFAULT_PROFILE.headline,
+            bio: typeof user['bio'] === 'string' ? user['bio'] : DEFAULT_PROFILE.bio,
+            role: typeof user['role'] === 'string' ? user['role'] : DEFAULT_PROFILE.role,
+            experienceYears: typeof user['experience_years'] === 'string' ? user['experience_years'] : DEFAULT_PROFILE.experienceYears,
+            availability: typeof user['availability'] === 'string' ? user['availability'] : DEFAULT_PROFILE.availability,
+            offeringTags: Array.isArray(user['offering_tags']) ? (user['offering_tags'] as string[]) : DEFAULT_PROFILE.offeringTags,
+            seekingTags: Array.isArray(user['seeking_tags']) ? (user['seeking_tags'] as string[]) : DEFAULT_PROFILE.seekingTags,
+            githubUsername: typeof user['github_username'] === 'string' ? user['github_username'] : DEFAULT_PROFILE.githubUsername,
+          });
+        })
+        .catch(() => {
+          // Keep default fallback on network error
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [initialProfile]);
+
+  const profile = profileData;
   return (
     <SafeAreaView style={styles.safeArea}>
       <SimpleTitleHeader title="הפרופיל שלי" />

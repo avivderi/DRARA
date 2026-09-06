@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 6 (Workspace)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
 
 import { WorkspaceSubNav, WorkspaceTabType } from '../../components/layout/footers/WorkspaceSubNav';
 import { WorkspaceHeader } from '../../components/layout/headers/WorkspaceHeader';
+import { apiClient } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface MilestoneItem {
@@ -21,6 +21,7 @@ export interface MilestoneItem {
 }
 
 interface RoadmapScreenProps {
+  workspaceId?: string;
   ideaTitle?: string;
   partnerName?: string;
   onBackPress: () => void;
@@ -52,12 +53,50 @@ const SAMPLE_MILESTONES: MilestoneItem[] = [
 ];
 
 export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
+  workspaceId,
   ideaTitle = 'DRARA - Co-Founder Platform',
   partnerName = 'אלון מזרחי',
   onBackPress,
   onNavigateSubTab,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<WorkspaceTabType>('roadmap');
+  const [milestones, setMilestones] = useState<MilestoneItem[]>(SAMPLE_MILESTONES);
+
+  useEffect(() => {
+    if (workspaceId) {
+      let isMounted = true;
+      apiClient
+        .get<Record<string, unknown>>(`/workspaces/${workspaceId}/roadmap`)
+        .then((res) => {
+          if (!isMounted) return;
+          const raw = res?.['data'] ?? res;
+          if (Array.isArray(raw) && raw.length > 0) {
+            setMilestones(
+              raw.map((item: unknown) => {
+                const m = item as Record<string, unknown>;
+                const rawStatus = String(m['status'] ?? 'upcoming');
+                const status: 'completed' | 'in_progress' | 'upcoming' =
+                  rawStatus === 'completed' || rawStatus === 'in_progress' ? rawStatus : 'upcoming';
+                return {
+                  id: String(m['id'] ?? 'm'),
+                  title: String(m['title'] ?? ''),
+                  targetDate: String(m['target_date'] ?? m['targetDate'] ?? '2026'),
+                  status,
+                  description: String(m['description'] ?? ''),
+                };
+              }),
+            );
+          }
+        })
+        .catch(() => {
+          // Keep sample milestones fallback if workspace endpoint fails
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [workspaceId]);
 
   const handleSubTabChange = (tab: WorkspaceTabType) => {
     setActiveSubTab(tab);
@@ -76,7 +115,7 @@ export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
         <Text style={styles.subtitle}>מפת הדרכים ואבני הדרך המרכזיות להשקת המיזם (Roadmap)</Text>
 
         <View style={styles.timeline}>
-          {SAMPLE_MILESTONES.map((m) => (
+          {milestones.map((m) => (
             <View key={m.id} style={styles.milestoneCard}>
               <View style={styles.cardHeader}>
                 <View

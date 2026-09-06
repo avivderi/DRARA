@@ -13,7 +13,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16-alpine
         env:
           POSTGRES_DB: drara_test
           POSTGRES_USER: drara
@@ -53,6 +53,15 @@ jobs:
           mkdir -p apps/api/keys
           openssl genrsa -out apps/api/keys/private.pem 4096
           openssl rsa -in apps/api/keys/private.pem -pubout -out apps/api/keys/public.pem
+
+      - name: Run DB Migrations
+        run: npm run db:migrate --workspace=apps/api
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: drara_test
+          DB_USER: drara
+          DB_PASSWORD: drara_test_password
 
       - name: Lint
         run: npm run lint

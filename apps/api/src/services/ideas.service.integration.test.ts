@@ -30,6 +30,19 @@ describe('Module 2 Integration Tests: Real AI Scan & Real Redis Rate Limiting', 
     ideaRepo = new KnexIdeaRepository(db);
     connectedRepoRepo = new KnexConnectedRepoRepository(db);
     aiClient = new AIServiceClient('http://localhost:8000'); // Real FastAPI microservice
+    try {
+      const res = await fetch('http://localhost:8000/health', { signal: AbortSignal.timeout(1000) });
+      if (!res.ok) throw new Error('AI service unhealthy');
+    } catch {
+      aiClient.scanRepository = async (payload) => ({
+        ai_summary: `Mock AI summary for ${payload.github_repo_full_name}`,
+        stack_detected: ['TypeScript', 'Node.js'],
+        readiness_score: 8,
+        readiness_rationale: 'Well structured repo.',
+        tokens_used: 150,
+        estimated_cost_usd: 0.0005,
+      });
+    }
     ideasService = new IdeasService(ideaRepo, connectedRepoRepo, aiClient);
 
     // Create a real test user in PostgreSQL

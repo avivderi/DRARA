@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
-  ActivityIndicator,
 } from 'react-native';
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
@@ -39,30 +38,35 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({
   onSelectThread,
 }) => {
   const [threadList, setThreadList] = useState<ChatThread[]>(propThreads || []);
-  const [loading, setLoading] = useState(!propThreads);
 
   useEffect(() => {
     if (!propThreads) {
-      setLoading(true);
-      apiGet<{ conversations: any[] }>('/conversations')
+      apiGet<Record<string, unknown>>('/conversations')
         .then((res) => {
-          if (Array.isArray(res.conversations)) {
-            const mapped = res.conversations.map((c: any) => ({
-              id: c.id || c.threadId,
-              partnerName: c.partner_name || c.partnerName || 'שותף',
-              partnerAvatar: c.partner_avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-              lastMessage: c.last_message || c.lastMessage || 'אין הודעות קודמות',
-              timestamp: c.updated_at ? new Date(c.updated_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : 'חדש',
-              unreadCount: c.unread_count || c.unreadCount || 0,
-              isConfirmedMatch: Boolean(c.nfc_confirmed || c.isConfirmedMatch),
-            }));
+          const conversations = res['conversations'];
+          if (Array.isArray(conversations)) {
+            const mapped = conversations.map((item: unknown) => {
+              const c = item as Record<string, unknown>;
+              return {
+                id: String(c['id'] ?? c['threadId'] ?? ''),
+                partnerName: String(c['partner_name'] ?? c['partnerName'] ?? 'שותף'),
+                partnerAvatar: String(c['partner_avatar'] ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+                lastMessage: String(c['last_message'] ?? c['lastMessage'] ?? 'אין הודעות קודמות'),
+                timestamp: typeof c['updated_at'] === 'string'
+                  ? new Date(c['updated_at']).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                  : 'חדש',
+                unreadCount: typeof c['unread_count'] === 'number' ? c['unread_count'] : 0,
+                isConfirmedMatch: Boolean(c['nfc_confirmed'] ?? c['isConfirmedMatch']),
+              };
+            });
             setThreadList(mapped);
           }
         })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+        .catch(() => {
+          // Keep default fallback
+        });
     }
-  }, []);
+  }, [propThreads]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

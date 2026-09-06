@@ -5,7 +5,6 @@ import {
   View,
   SafeAreaView,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 
 import { WorkspaceSubNav, WorkspaceTabType } from '../../components/layout/footers/WorkspaceSubNav';
@@ -19,6 +18,15 @@ export interface DecisionItem {
   decisionDate: string;
   decidedBy: string;
   summary: string;
+}
+
+interface ApiDecision {
+  id: string;
+  title?: string;
+  created_at?: string;
+  created_by_name?: string;
+  rationale?: string;
+  summary?: string;
 }
 
 interface DecisionLogScreenProps {
@@ -38,13 +46,12 @@ export const DecisionLogScreen: React.FC<DecisionLogScreenProps> = ({
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<WorkspaceTabType>('decisions');
   const [decisions, setDecisions] = useState<DecisionItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiGet<{ decisions: any[] }>(`/workspaces/${workspaceId}/decisions`)
+    apiGet<{ decisions: ApiDecision[] }>(`/workspaces/${workspaceId}/decisions`)
       .then((res) => {
         if (Array.isArray(res.decisions)) {
-          const mapped = res.decisions.map((d: any) => ({
+          const mapped: DecisionItem[] = res.decisions.map((d) => ({
             id: d.id,
             title: d.title || 'החלטת מייסדים',
             decisionDate: d.created_at ? new Date(d.created_at).toLocaleDateString('he-IL') : 'נרשם לאחרונה',
@@ -64,9 +71,9 @@ export const DecisionLogScreen: React.FC<DecisionLogScreenProps> = ({
             summary: 'הוחלט לעבוד עם Voyage AI בשילוב pgvector לקבלת דירוג סמנטי יציב.',
           },
         ]);
-      })
-      .finally(() => setLoading(false));
+      });
   }, [workspaceId]);
+
 
 
   const handleSubTabChange = (tab: WorkspaceTabType) => {

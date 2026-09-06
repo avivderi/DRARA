@@ -1,14 +1,18 @@
 import { AppError } from '../lib/errors';
-import type { IMatchRepository } from '../repositories/match.repository.interface';
+import type { Match, IMatchRepository } from '../repositories/match.repository.interface';
 import type { IUserRepository } from '../repositories/user.repository.interface';
 import type {
+  DecisionEntry,
   IDecisionRepository,
   IEquityRepository,
   IIdeaBoardRepository,
   IRoadmapRepository,
   IWorkspaceRepository,
+  IdeaBoardEntry,
   RoadmapMilestone,
+  Workspace,
 } from '../repositories/workspace.repository.interface';
+
 import type { AIServiceClient } from './ai-service.client';
 
 export const DEFAULT_EQUITY_TOPICS = [
@@ -20,6 +24,53 @@ export const DEFAULT_EQUITY_TOPICS = [
 
 export const LEGAL_DISCLAIMER =
   'This framework is for discussion tracking purposes only and does not constitute legal, tax, or financial advice or a binding legal agreement.';
+
+export interface WorkspaceOverviewResult {
+  workspace: Workspace;
+  team_members: Array<{
+    id: string;
+    name: string;
+    email: string;
+    avatar_url: string | null;
+    offering_tags: string[];
+  }>;
+  roadmap_summary: {
+    total_milestones: number;
+    completed_milestones: number;
+    in_progress_milestones: number;
+  };
+  decisions_summary: {
+    total_decisions: number;
+  };
+  equity_summary: {
+    topics_discussed: number;
+    total_topics: number;
+  };
+}
+
+export interface IdeaBoardSectionResult {
+  section: string;
+  content: string;
+  updated_by: string | null;
+  updated_at: Date | string | null;
+}
+
+export interface EquityFrameworkResult {
+  topics: Array<{
+    topic: string;
+    label: string;
+    discussed: boolean;
+    discussed_at: Date | string | null;
+  }>;
+  disclaimer: string;
+}
+
+export interface EquityTopicUpdateResult {
+  topic: string;
+  discussed: boolean;
+  discussed_at: Date | string | null;
+  disclaimer: string;
+}
 
 export class WorkspaceService {
   constructor(
@@ -36,7 +87,10 @@ export class WorkspaceService {
   /**
    * Verifies that workspace exists and the requesting user is a match participant.
    */
-  async verifyWorkspaceAccess(workspaceId: string, userId: string) {
+  async verifyWorkspaceAccess(
+    workspaceId: string,
+    userId: string,
+  ): Promise<{ workspace: Workspace; match: Match }> {
     const workspace = await this.workspaceRepo.findById(workspaceId);
     if (!workspace) {
       throw AppError.notFound('Workspace not found');
@@ -57,7 +111,10 @@ export class WorkspaceService {
   /**
    * Retrieves aggregated workspace overview.
    */
-  async getWorkspaceOverview(workspaceId: string, userId: string) {
+  async getWorkspaceOverview(
+    workspaceId: string,
+    userId: string,
+  ): Promise<WorkspaceOverviewResult> {
     const { workspace, match } = await this.verifyWorkspaceAccess(workspaceId, userId);
 
     const [user1, user2] = await Promise.all([
@@ -104,7 +161,10 @@ export class WorkspaceService {
   /**
    * Fetches idea board text entries.
    */
-  async getIdeaBoard(workspaceId: string, userId: string) {
+  async getIdeaBoard(
+    workspaceId: string,
+    userId: string,
+  ): Promise<IdeaBoardSectionResult[]> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     const existingEntries = await this.ideaBoardRepo.getEntries(workspaceId);
 
@@ -130,7 +190,7 @@ export class WorkspaceService {
     section: string,
     content: string,
     userId: string,
-  ) {
+  ): Promise<IdeaBoardEntry> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     const allowedSections = ['vision', 'problem', 'audience', 'solution', 'business_model'];
     if (!allowedSections.includes(section)) {
@@ -143,7 +203,10 @@ export class WorkspaceService {
   /**
    * Fetches roadmap milestones.
    */
-  async getRoadmap(workspaceId: string, userId: string) {
+  async getRoadmap(
+    workspaceId: string,
+    userId: string,
+  ): Promise<RoadmapMilestone[]> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     return this.roadmapRepo.getMilestones(workspaceId);
   }
@@ -161,7 +224,7 @@ export class WorkspaceService {
       status?: 'not_started' | 'in_progress' | 'done';
       assigned_to?: string;
     },
-  ) {
+  ): Promise<RoadmapMilestone> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     if (!data.title || data.title.trim() === '') {
       throw AppError.badRequest('Milestone title is required');
@@ -192,7 +255,7 @@ export class WorkspaceService {
       status: 'not_started' | 'in_progress' | 'done';
       assigned_to: string | null;
     }>,
-  ) {
+  ): Promise<RoadmapMilestone> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     const milestone = await this.roadmapRepo.findById(milestoneId);
     if (!milestone || milestone.workspace_id !== workspaceId) {
@@ -239,7 +302,10 @@ export class WorkspaceService {
   /**
    * Fetches decision log entries.
    */
-  async getDecisions(workspaceId: string, userId: string) {
+  async getDecisions(
+    workspaceId: string,
+    userId: string,
+  ): Promise<DecisionEntry[]> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     return this.decisionRepo.getDecisions(workspaceId);
   }
@@ -251,7 +317,7 @@ export class WorkspaceService {
     workspaceId: string,
     userId: string,
     data: { title: string; rationale: string },
-  ) {
+  ): Promise<DecisionEntry> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     if (!data.title || data.title.trim() === '') {
       throw AppError.badRequest('Decision title is required');
@@ -271,7 +337,10 @@ export class WorkspaceService {
   /**
    * Fetches equity framework discussion topics with legal disclaimer.
    */
-  async getEquityFramework(workspaceId: string, userId: string) {
+  async getEquityFramework(
+    workspaceId: string,
+    userId: string,
+  ): Promise<EquityFrameworkResult> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     const dbTopics = await this.equityRepo.getTopics(workspaceId);
     const dbTopicMap = new Map(dbTopics.map((t) => [t.topic, t]));
@@ -300,7 +369,7 @@ export class WorkspaceService {
     topic: string,
     discussed: boolean,
     userId: string,
-  ) {
+  ): Promise<EquityTopicUpdateResult> {
     await this.verifyWorkspaceAccess(workspaceId, userId);
     const validTopics = DEFAULT_EQUITY_TOPICS.map((t) => t.topic);
     if (!validTopics.includes(topic)) {

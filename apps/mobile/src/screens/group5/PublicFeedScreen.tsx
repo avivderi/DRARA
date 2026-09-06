@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
-  ActivityIndicator,
 } from 'react-native';
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
@@ -24,6 +23,23 @@ export interface PublicIdeaItem {
   readinessScore: number;
   tags: string[];
   summary: string;
+}
+
+interface ApiPublicIdea {
+  id: string;
+  title?: string;
+  owner_name?: string;
+  ownerName?: string;
+  owner_avatar?: string;
+  github_repo_full_name?: string;
+  repoFullName?: string;
+  readiness_score?: number;
+  readinessScore?: number;
+  tags?: string[];
+  offering_tags?: string[];
+  manual_description?: string;
+  description?: string;
+  summary?: string;
 }
 
 interface PublicFeedScreenProps {
@@ -43,15 +59,13 @@ export const PublicFeedScreen: React.FC<PublicFeedScreenProps> = ({
 }) => {
   const [searchFilter, setSearchFilter] = useState('');
   const [ideaList, setIdeaList] = useState<PublicIdeaItem[]>(propIdeas || []);
-  const [loading, setLoading] = useState(!propIdeas);
 
   useEffect(() => {
     if (!propIdeas) {
-      setLoading(true);
-      apiGet<{ ideas: any[] }>('/ideas/public')
+      apiGet<{ ideas: ApiPublicIdea[] }>('/ideas/public')
         .then((res) => {
           if (Array.isArray(res.ideas)) {
-            const mapped = res.ideas.map((item: any) => ({
+            const mapped: PublicIdeaItem[] = res.ideas.map((item) => ({
               id: item.id,
               title: item.title || 'מיזם ללא שם',
               ownerName: item.owner_name || item.ownerName || 'מייתר לא ידוע',
@@ -64,10 +78,10 @@ export const PublicFeedScreen: React.FC<PublicFeedScreenProps> = ({
             setIdeaList(mapped);
           }
         })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+        .catch(() => {});
     }
-  }, []);
+  }, [propIdeas]);
+
 
 
   const filteredIdeas = ideaList.filter(

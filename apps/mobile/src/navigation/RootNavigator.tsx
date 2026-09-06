@@ -162,7 +162,7 @@ function OnboardingNavigator() {
         {({ navigation }: any) => (
           <ProfileCompletionSuccessScreen
             onViewMatches={() => navigation.replace('MainApp', { screen: 'HomeTab' })}
-            onCreateIdea={() => (navigation.getParent() as any)?.navigate('IdeaUpload')}
+            onCreateIdea={() => (navigation.getParent())?.navigate('IdeaUpload')}
           />
         )}
       </OnboardingStack.Screen>
@@ -273,7 +273,7 @@ function MatchesNavigator() {
       <MatchesStack.Screen name="MyIdeas">
         {({ navigation }) => (
           <MyIdeasScreen
-            onCreateNewIdea={() => (navigation.getParent() as any)?.navigate('IdeaUpload')}
+            onCreateNewIdea={() => (navigation.getParent())?.navigate('IdeaUpload')}
             onSelectIdeaMatches={() => navigation.navigate('MatchesFeed')}
             onToggleVisibility={() => {}}
           />

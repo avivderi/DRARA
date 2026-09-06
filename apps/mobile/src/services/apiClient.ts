@@ -1,9 +1,10 @@
 import { Platform } from 'react-native';
+
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './authStore';
 
 export function getApiBaseUrl(): string {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+  if (process.env['EXPO_PUBLIC_API_URL']) {
+    return process.env['EXPO_PUBLIC_API_URL'];
   }
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:3001';
@@ -11,11 +12,20 @@ export function getApiBaseUrl(): string {
   return 'http://localhost:3001';
 }
 
-
 export interface RequestOptions {
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   skipAuth?: boolean;
+}
+
+interface RefreshTokenResponseBody {
+  access_token?: string;
+  refresh_token?: string;
+}
+
+interface ErrorResponseBody {
+  error?: string;
+  message?: string;
 }
 
 async function refreshAuthTokens(): Promise<string | null> {
@@ -34,19 +44,19 @@ async function refreshAuthTokens(): Promise<string | null> {
       return null;
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as RefreshTokenResponseBody;
     if (data.access_token && data.refresh_token) {
       await setTokens(data.access_token, data.refresh_token);
       return data.access_token;
     }
-  } catch (err) {
-    console.error('Failed to refresh auth tokens:', err);
+  } catch {
+    // refresh failed silently
   }
   await clearTokens();
   return null;
 }
 
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' = 'GET',
   options: RequestOptions = {},
@@ -75,7 +85,6 @@ export async function apiRequest<T = any>(
 
   let response = await fetch(url, fetchOptions);
 
-  // If 401 Unauthorized, try refreshing tokens once and retry request
   if (response.status === 401 && !options.skipAuth) {
     const newToken = await refreshAuthTokens();
     if (newToken) {
@@ -88,7 +97,7 @@ export async function apiRequest<T = any>(
   if (!response.ok) {
     let errorMessage = `HTTP error ${response.status}`;
     try {
-      const errJson = await response.json();
+      const errJson = (await response.json()) as ErrorResponseBody;
       errorMessage = errJson.error || errJson.message || errorMessage;
     } catch {
       // ignore parsing error
@@ -100,17 +109,28 @@ export async function apiRequest<T = any>(
     return {} as T;
   }
 
-  return response.json();
+  return (await response.json()) as T;
 }
 
-export const apiGet = <T = any>(endpoint: string, options?: RequestOptions) =>
+export const apiGet = <T = unknown>(endpoint: string, options?: RequestOptions): Promise<T> =>
   apiRequest<T>(endpoint, 'GET', options);
 
-export const apiPost = <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+export const apiPost = <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> =>
   apiRequest<T>(endpoint, 'POST', { ...options, body });
 
-export const apiPatch = <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+export const apiPatch = <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> =>
   apiRequest<T>(endpoint, 'PATCH', { ...options, body });
 
-export const apiDelete = <T = any>(endpoint: string, options?: RequestOptions) =>
+export const apiDelete = <T = unknown>(endpoint: string, options?: RequestOptions): Promise<T> =>
   apiRequest<T>(endpoint, 'DELETE', options);
+
+export const apiClient = {
+  get: <T = unknown>(endpoint: string, options?: RequestOptions): Promise<T> =>
+    apiGet<T>(endpoint, options),
+  post: <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> =>
+    apiPost<T>(endpoint, body, options),
+  patch: <T = unknown>(endpoint: string, body?: unknown, options?: RequestOptions): Promise<T> =>
+    apiPatch<T>(endpoint, body, options),
+  delete: <T = unknown>(endpoint: string, options?: RequestOptions): Promise<T> =>
+    apiDelete<T>(endpoint, options),
+};

@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface PublicIdeaDetails {
@@ -26,7 +26,26 @@ export interface PublicIdeaDetails {
   seekingGaps: string[];
 }
 
+interface ApiPublicDetails {
+  id: string;
+  title?: string;
+  owner_name?: string;
+  ownerName?: string;
+  owner_avatar?: string;
+  owner_headline?: string;
+  github_repo_full_name?: string;
+  readiness_score?: number;
+  ai_summary?: string;
+  manual_description?: string;
+  description?: string;
+  tags?: string[];
+  offering_tags?: string[];
+  seeking_tags?: string[];
+  seekingGaps?: string[];
+}
+
 interface PublicIdeaDetailsScreenProps {
+  ideaId?: string;
   idea?: PublicIdeaDetails;
   onBackPress: () => void;
   onRequestContact: () => void;
@@ -46,43 +65,69 @@ const DEFAULT_DETAILS: PublicIdeaDetails = {
 };
 
 export const PublicIdeaDetailsScreen: React.FC<PublicIdeaDetailsScreenProps> = ({
-  idea = DEFAULT_DETAILS,
+  ideaId,
+  idea: propIdea,
   onBackPress,
   onRequestContact,
 }) => {
+  const [details, setDetails] = useState<PublicIdeaDetails>(propIdea || DEFAULT_DETAILS);
+
+  useEffect(() => {
+    if (!propIdea && ideaId) {
+      apiGet<ApiPublicDetails>(`/ideas/public/${ideaId}`)
+        .then((res) => {
+          if (res && res.id) {
+            setDetails({
+              id: res.id,
+              title: res.title || 'מיזם ללא שם',
+              ownerName: res.owner_name || res.ownerName || 'מייזם',
+              ownerAvatar: res.owner_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+              ownerHeadline: res.owner_headline || 'Co-Founder & Product Lead',
+              repoFullName: res.github_repo_full_name,
+              readinessScore: res.readiness_score || 8,
+              aiSummary: res.ai_summary || res.manual_description || res.description || 'אין תיאור זמין',
+              tags: res.tags || res.offering_tags || ['SaaS', 'Cloud'],
+              seekingGaps: res.seekingGaps || res.seeking_tags || ['Fullstack', 'DevOps'],
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [ideaId, propIdea]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <SimpleTitleHeader title="פרטי מיזם ציבורי" onBackPress={onBackPress} />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
-          <Text style={styles.ideaTitle}>{idea.title}</Text>
-          {idea.repoFullName ? (
-            <Text style={styles.repoName}>🐙 {idea.repoFullName}</Text>
+          <Text style={styles.ideaTitle}>{details.title}</Text>
+          {details.repoFullName ? (
+            <Text style={styles.repoName}>🐙 {details.repoFullName}</Text>
           ) : null}
 
           <View style={styles.scoreBadge}>
-            <Text style={styles.scoreText}>⭐ Readiness Score: {idea.readinessScore}/10</Text>
+            <Text style={styles.scoreText}>⭐ Readiness Score: {details.readinessScore}/10</Text>
           </View>
         </View>
 
         <View style={styles.ownerCard}>
-          <Image source={{ uri: idea.ownerAvatar }} style={styles.ownerAvatar} />
+          <Image source={{ uri: details.ownerAvatar }} style={styles.ownerAvatar} />
           <View style={styles.ownerInfo}>
-            <Text style={styles.ownerName}>{idea.ownerName}</Text>
-            <Text style={styles.ownerHeadline}>{idea.ownerHeadline}</Text>
+            <Text style={styles.ownerName}>{details.ownerName}</Text>
+            <Text style={styles.ownerHeadline}>{details.ownerHeadline}</Text>
           </View>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>📝 תמצית המיזם (AI Summary)</Text>
-          <Text style={styles.cardText}>{idea.aiSummary}</Text>
+          <Text style={styles.cardText}>{details.aiSummary}</Text>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>🛠️ טכנולוגיות שנמצאו (Stack)</Text>
           <View style={styles.chipsRow}>
-            {idea.tags.map((tag) => (
+            {details.tags.map((tag) => (
               <View key={`pub-tag-${tag}`} style={styles.tagChip}>
                 <Text style={styles.tagChipText}>{tag}</Text>
               </View>
@@ -93,13 +138,14 @@ export const PublicIdeaDetailsScreen: React.FC<PublicIdeaDetailsScreenProps> = (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>🎯 מחפש בשותף (Gaps Required)</Text>
           <View style={styles.chipsRow}>
-            {idea.seekingGaps.map((gap) => (
+            {details.seekingGaps.map((gap) => (
               <View key={`pub-gap-${gap}`} style={styles.gapChip}>
                 <Text style={styles.gapChipText}>{gap}</Text>
               </View>
             ))}
           </View>
         </View>
+
       </ScrollView>
 
       <View style={styles.footerBar}>

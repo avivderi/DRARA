@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
 
 import { ChatInputFooter } from '../../components/layout/footers/ChatInputFooter';
 import { ChatHeader } from '../../components/layout/headers/ChatHeader';
+import { apiGet, apiPost } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface ChatMessage {
@@ -21,50 +21,55 @@ export interface ChatMessage {
 }
 
 interface ChatConversationScreenProps {
+  threadId?: string;
   partnerName?: string;
   partnerAvatar?: string;
   ideaTitle?: string;
   isVettingMode?: boolean;
   messages?: ChatMessage[];
   onBackPress: () => void;
-  onSendMessage: (text: string) => void;
+  onSendMessage?: (text: string) => void;
   onInitiateHandshake?: () => void;
 }
 
-const SAMPLE_MESSAGES: ChatMessage[] = [
-  {
-    id: 'm1',
-    senderId: 'partner',
-    text: 'היי! ראיתי את המאצ\' בינינו ב-DRARA. התרשמתי מאוד מה-Readiness Score של המיזם.',
-    timestamp: '10:30',
-    isMe: false,
-  },
-  {
-    id: 'm2',
-    senderId: 'me',
-    text: 'תודה אלון! ה-Stack שלך ב-Backend & DevOps בול מה שחסר לי במיזם.',
-    timestamp: '10:35',
-    isMe: true,
-  },
-  {
-    id: 'm3',
-    senderId: 'partner',
-    text: 'מעולה! נתראה ב-WeWork Sarona בשעה 16:00 ל-NFC Handshake.',
-    timestamp: '10:42',
-    isMe: false,
-  },
-];
-
 export const ChatConversationScreen: React.FC<ChatConversationScreenProps> = ({
+  threadId = 'thread-1',
   partnerName = 'אלון מזרחי',
   ideaTitle = 'DRARA - Co-Founder Platform',
   isVettingMode = false,
-  messages = SAMPLE_MESSAGES,
+  messages: propMessages,
   onBackPress,
   onSendMessage,
   onInitiateHandshake,
 }) => {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(messages);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(propMessages || []);
+
+  useEffect(() => {
+    if (!propMessages && threadId) {
+      apiGet<Record<string, unknown>>(`/conversations/${threadId}/messages`)
+        .then((res) => {
+          const messages = res['messages'];
+          if (Array.isArray(messages)) {
+            const mapped = messages.map((item: unknown) => {
+              const m = item as Record<string, unknown>;
+              return {
+                id: String(m['id'] ?? ''),
+                senderId: String(m['sender_id'] ?? ''),
+                text: String(m['content'] ?? m['text'] ?? ''),
+                timestamp: typeof m['created_at'] === 'string'
+                  ? new Date(m['created_at']).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                  : 'עכשיו',
+                isMe: Boolean(m['is_me'] ?? m['isMe']),
+              };
+            });
+            setChatMessages(mapped);
+          }
+        })
+        .catch(() => {
+          // Keep default fallback
+        });
+    }
+  }, [propMessages, threadId]);
 
   const handleSend = (text: string) => {
     const newMsg: ChatMessage = {
@@ -74,9 +79,16 @@ export const ChatConversationScreen: React.FC<ChatConversationScreenProps> = ({
       timestamp: 'עכשיו',
       isMe: true,
     };
-    setChatMessages([...chatMessages, newMsg]);
-    onSendMessage(text);
+    setChatMessages((prev) => [...prev, newMsg]);
+
+    if (threadId) {
+      apiPost(`/conversations/${threadId}/messages`, { content: text }).catch(() => {});
+    }
+    if (onSendMessage) {
+      onSendMessage(text);
+    }
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
