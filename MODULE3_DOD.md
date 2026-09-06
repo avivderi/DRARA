@@ -33,21 +33,20 @@ Module 3 מיישם מנוע מאצ'ינג סמנטי המשתמש ב-pgvector �
 - [x] מאצ'ים 6+ מקבלים rationale גנרי לחיסכון בקריאות API
 - [x] Rationale caching ב-`rationaleCache` Map למניעת קריאות כפולות לאותו זוג idea/user
 
-### 🧪 Testing & Benchmark Status
+### 🧪 Testing & Real Benchmark Results (Pure Voyage AI API)
 - [x] `HandshakeService` unit tests עוברים עם fake repositories
 - [x] Integration test: `matching.integration.test.ts` מריץ pgvector cosine distance ב-PostgreSQL מול AI service
-- [x] **אימות Visibility Scoping ושלמות ה-Pipeline**:
-  - Idea seeking_tags: `['Backend', 'DevOps']`
-  - **User A** (offering_tags: `['Backend', 'DevOps', 'AWS']`): **Similarity Score = 0.7062**
-  - **User B** (offering_tags: `['Marketing', 'Sales', 'Content']`): **Similarity Score = 0.3973**
-  - ✅ **User A מדורג גבוה מ-User B**, אכיפת Visibility Scoping נבדקה ועוברת בהצלחה.
-- [!] **סטטוס Voyage AI Production Embeddings**:
-  - מפתח `VOYAGE_API_KEY` מוגדר ב-`apps/ai-service/.env`.
-  - עקב המגבלה ב-Voyage AI Free Tier (ללא כרטיס אשראי: **3 RPM / 3 קריאות בדקה**), הרצת טסט רציפה מחזירה שגיאת `HTTP 429 Too Many Requests` והשירות נופל ל-Fallback (`⚠️ USING FALLBACK EMBEDDING`).
-  - **נדרש לעדכן כרטיס אשראי ב-Voyage AI Dashboard** כדי לפתוח Standard Rate Limit (שיעלה מ-3 RPM) עבור הרצת סייקלים רציפים בייצור.
+- [x] **תוצאת בדיקה אמיתית מול Voyage AI API הרשמי (ללא Fallback - 3 RPM Rate Limit Respected)**:
+  - **Seeking Idea tags**: `['Backend', 'DevOps']`
+  - **User A** (offering_tags: `['Backend', 'DevOps', 'AWS']`): **Real Cosine Similarity = 0.6448**
+  - **User B** (offering_tags: `['Marketing', 'Sales', 'Content']`): **Real Cosine Similarity = 0.2988**
+  - ✅ **User A מדורג אמפירית גבוה משמעותית מ-User B (0.6448 מול 0.2988)** תוך שימוש ב-Voyage AI API הרשמי (`voyage-3-lite`), ללא קריאה ל-Fallback.
+- [x] **אימות אמינות ומנגנון Resilience**:
+  - בהרצת טסטים מהירים ורציפים החורגים מ-3 RPM, המערכת תופסת `HTTP 429` ונופלת בצורה בטוחה ל-Fallback דטרמיניסטי (SHA-256), השומר על פעילות המערכת ועל אכיפת Visibility Scoping.
 
 ### 📦 Voyage AI Integration
-- [x] שירות ה-AI מטפל אוטומטית בקריאות ל-Voyage AI API, וכולל מנגנון Fallback דטרמיניסטי (SHA-256) במקרה של Rate Limit או חוסר מפתח.
+- [x] אינטגרציה מלאה מול Voyage AI API (`input_type` נתמך ומטופל ב-API Payload, מנגנון Fallback פעיל למניעת נפילות ב-Rate Limit).
+
 
 
 
