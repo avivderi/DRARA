@@ -55,6 +55,7 @@ describe('IdeasService Unit Tests', () => {
     assert.equal(repo.github_repo_full_name, 'avivderi/DRARA');
   });
 
+  // TODO: mock Redis client in this test setup, currently fails without live Redis connection
   it('scanIdea invokes AI client and updates scan result in idea repo', async () => {
     const idea = await ideasService.createIdea('user_1', 'AI App');
     await ideasService.connectRepo('user_1', idea.id, 'avivderi/DRARA', 'inst_999');
