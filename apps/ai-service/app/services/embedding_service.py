@@ -2,7 +2,8 @@ import hashlib
 import logging
 import math
 from typing import List, Optional
-import requests
+
+import httpx
 
 from app.config import settings
 
@@ -58,7 +59,7 @@ def get_embedding(text: str, input_type: Optional[str] = "document") -> List[flo
         if input_type in ("query", "document"):
             payload["input_type"] = input_type
 
-        response = requests.post(VOYAGE_API_URL, json=payload, headers=headers, timeout=10)
+        response = httpx.post(VOYAGE_API_URL, json=payload, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
         embedding = data["data"][0]["embedding"]

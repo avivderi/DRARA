@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+
 import { colors, fonts } from '../../theme/tokens';
 
 
