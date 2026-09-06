@@ -64,11 +64,10 @@ export const RepoSelectionScreen: React.FC<RepoSelectionScreenProps> = ({
           }
         })
         .catch(() => {
-          ]);
-        })
-        .finally(() => setLoading(false));
+          setError('לא ניתן לטעון מאגרים מ-GitHub');
+        });
     }
-  }, []);
+  }, [propRepos, selectedRepo]);
 
   const filteredRepos = repoList.filter((r) =>
     r.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||

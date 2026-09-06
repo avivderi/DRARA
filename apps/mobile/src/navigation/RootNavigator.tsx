@@ -1,7 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { StyleSheet } from 'react-native';
 
 import { BottomTabBar, TabType } from '../components/layout/footers/BottomTabBar';
 import { AvatarHeadlineScreen } from '../screens/group1/AvatarHeadlineScreen';
