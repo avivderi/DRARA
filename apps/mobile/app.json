@@ -13,6 +13,9 @@
         "android.permission.NFC"
       ]
     },
+    "ios": {
+      "bundleIdentifier": "com.drara.mobile"
+    },
     "plugins": [
       "react-native-nfc-manager",
       [
