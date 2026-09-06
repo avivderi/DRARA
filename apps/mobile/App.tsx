@@ -16,6 +16,7 @@ import { AIScanLoadingScreen } from './src/screens/group2/AIScanLoadingScreen';
 import { MatchesFeedScreen } from './src/screens/group3/MatchesFeedScreen';
 import { NFCHandshakeScreen } from './src/screens/group4/NFCHandshakeScreen';
 import { NFCSuccessScreen } from './src/screens/group4/NFCSuccessScreen';
+import type { TabType } from './src/components/layout/footers/BottomTabBar';
 import { colors, fonts } from './src/theme/tokens';
 
 type ScreenId =
@@ -39,7 +40,7 @@ const SCREENS: { id: ScreenId; title: string }[] = [
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>('welcome');
-  const [activeTab, setActiveTab] = useState<'home' | 'discover' | 'inbox' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<TabType>('home');
 
   return (
     <SafeAreaView style={styles.safeArea}>
