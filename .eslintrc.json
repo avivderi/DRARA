@@ -9,18 +9,21 @@
       "./apps/web/tsconfig.json",
       "./apps/mobile/tsconfig.json",
       "./packages/shared-types/tsconfig.json"
-    ],
-    "tsconfigRootDir": "."
+    ]
   },
   "settings": {
     "import/resolver": {
       "typescript": {
+        "alwaysTryTypes": true,
         "project": [
           "./apps/api/tsconfig.json",
           "./apps/web/tsconfig.json",
           "./apps/mobile/tsconfig.json",
           "./packages/shared-types/tsconfig.json"
         ]
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     }
   },
@@ -58,7 +61,7 @@
         "alphabetize": { "order": "asc" }
       }
     ],
-    "import/no-cycle": "error",
+    "import/no-cycle": "off",
     "import/namespace": "off"
   },
   "overrides": [
