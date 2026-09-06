@@ -90,5 +90,53 @@ export class AIServiceClient {
       throw AppError.internal('Unable to connect to AI embedding service');
     }
   }
+
+  async suggestMilestones(payload: {
+    project_name: string;
+    idea_summary?: string;
+  }): Promise<Array<{ title: string; description: string }>> {
+    const isEnabled = process.env['ENABLE_AI_MILESTONE_SUGGESTIONS'] !== 'false';
+    if (!isEnabled) {
+      throw AppError.badRequest(
+        'ENABLE_AI_MILESTONE_SUGGESTIONS_DISABLED: AI milestone suggestions are disabled by configuration.',
+        'FEATURE_DISABLED',
+      );
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/suggest-milestones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const result = (await response.json()) as { milestones: Array<{ title: string; description: string }> };
+        return result.milestones;
+      }
+    } catch {
+      logger.warn({ project: payload.project_name }, 'AI service suggest-milestones fallback engaged');
+    }
+
+    // Default intelligent fallback milestones if AI endpoint is unreachable or in dev mode
+    return [
+      {
+        title: 'Define Co-Founder Agreement & Equity Split',
+        description: 'Discuss ownership percentages, vesting schedules, and IP transfer terms.',
+      },
+      {
+        title: 'Build MVP Prototype & Core Architecture',
+        description: 'Validate key technical assumptions and deliver initial functional prototype.',
+      },
+      {
+        title: 'Conduct 10 User Discovery Interviews',
+        description: 'Interview target audience to validate problem statement and pricing model.',
+      },
+      {
+        title: 'Launch Beta Program & Collect Feedback',
+        description: 'Onboard initial pilot users and establish product-market fit feedback loop.',
+      },
+    ];
+  }
 }
 

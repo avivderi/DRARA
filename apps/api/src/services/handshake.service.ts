@@ -4,6 +4,7 @@ import type { IHandshakeEventRepository, HandshakeEvent } from '../repositories/
 import type { IMatchRepository, Match } from '../repositories/match.repository.interface';
 import type { INotificationRepository } from '../repositories/notification.repository.interface';
 import type { IUserRepository } from '../repositories/user.repository.interface';
+import type { IWorkspaceRepository } from '../repositories/workspace.repository.interface';
 
 const HANDSHAKE_SECRET = process.env['JWT_SECRET'] || 'drara-nfc-handshake-secret-key';
 
@@ -47,6 +48,7 @@ export class HandshakeService {
     private readonly handshakeEventRepository: IHandshakeEventRepository,
     private readonly userRepository: IUserRepository,
     private readonly notificationRepository?: INotificationRepository,
+    private readonly workspaceRepository?: IWorkspaceRepository,
   ) {}
 
   /**
@@ -193,6 +195,14 @@ export class HandshakeService {
     const updatedMatch = await this.matchRepository.updateStatus(matchId, 'confirmed');
     if (!updatedMatch) {
       throw new Error('Failed to update match status to confirmed');
+    }
+
+    // Auto-create workspace upon match confirmation
+    if (this.workspaceRepository) {
+      const existingWs = await this.workspaceRepository.findByMatchId(matchId);
+      if (!existingWs) {
+        await this.workspaceRepository.create({ match_id: matchId });
+      }
     }
 
     if (this.notificationRepository) {

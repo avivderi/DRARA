@@ -14,6 +14,7 @@ import { matchingRouter } from './routes/matching.routes';
 import { createNotificationsRouter } from './routes/notifications.routes';
 import { sessionRouter } from './routes/session.routes';
 import { usersRouter } from './routes/users.routes';
+import { createWorkspacesRouter } from './routes/workspaces.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -50,6 +51,7 @@ export function createApp(): Application {
   app.use('/handshake', handshakeRouter);
   app.use('/conversations', createConversationsRouter(db));
   app.use('/notifications', createNotificationsRouter(db));
+  app.use('/workspaces', createWorkspacesRouter(db));
   app.use('/', matchingRouter);
 
   // ── 404 handler ──────────────────────────────────────────

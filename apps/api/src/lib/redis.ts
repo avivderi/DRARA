@@ -21,15 +21,19 @@ export async function connectRedis(): Promise<void> {
 /** Typed wrapper around Redis for QR sessions and future use */
 export const redisClient = {
   set: async (key: string, value: string, ttlSeconds: number): Promise<void> => {
+    if (!client.isOpen) return;
     await client.setEx(key, ttlSeconds, value);
   },
   get: async (key: string): Promise<string | null> => {
+    if (!client.isOpen) return null;
     return client.get(key);
   },
   del: async (key: string): Promise<void> => {
+    if (!client.isOpen) return;
     await client.del(key);
   },
   exists: async (key: string): Promise<boolean> => {
+    if (!client.isOpen) return false;
     return (await client.exists(key)) === 1;
   },
 };
