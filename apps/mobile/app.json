@@ -8,10 +8,27 @@
     "userInterfaceStyle": "dark",
     "android": {
       "package": "com.drara.mobile",
-      "permissions": ["NFC"]
+      "permissions": [
+        "NFC",
+        "android.permission.NFC"
+      ]
     },
-    "plugins": ["react-native-nfc-manager"]
+    "plugins": [
+      "react-native-nfc-manager",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "289e6b1f-57c7-42a1-bb3a-8515f24747ba"
+      }
+    }
   }
 }
-
 
