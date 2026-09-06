@@ -12,10 +12,10 @@ import { WizardFooter } from '../../components/layout/footers/WizardFooter';
 import { WizardHeader } from '../../components/layout/headers/WizardHeader';
 import { colors, fonts } from '../../theme/tokens';
 
-export type UserRole = 'builder' | 'advisor' | 'specialist' | 'repeater';
+export type RoleIntent = 'technical' | 'business_product' | 'domain_expert';
 
 interface RoleOption {
-  id: UserRole;
+  id: RoleIntent;
   title: string;
   subtitle: string;
   icon: string;
@@ -25,7 +25,7 @@ interface RoleSelectionScreenProps {
   currentStep: number;
   totalSteps: number;
   onBackPress: () => void;
-  onNext: (selectedRole: UserRole) => void;
+  onNext: (selectedIntent: RoleIntent) => void;
 }
 
 export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
@@ -34,32 +34,26 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
   onBackPress,
   onNext,
 }) => {
-  const [selectedRole, setSelectedRole] = useState<UserRole>('builder');
+  const [selectedIntent, setSelectedIntent] = useState<RoleIntent>('technical');
 
-  const roles: RoleOption[] = [
+  const intents: RoleOption[] = [
     {
-      id: 'builder',
-      title: 'The Builder',
-      subtitle: 'מפתח/ת עם רעיון ו-Repo קוד, מחפש/ת שותף עסקי/מוצר',
+      id: 'technical',
+      title: 'פיתוח שטכנולוגיה (Tech & Engineering)',
+      subtitle: 'מתמקד/ת בקוד, ארכיטקטורה, תשתיות ומוצר טכנולוגי',
       icon: '💻',
     },
     {
-      id: 'advisor',
-      title: 'The Advisor / Mentor',
-      subtitle: 'בעל/ת ניסיון שרוצה לייעץ ולבחון הצטרפות כשותף/ה',
+      id: 'business_product',
+      title: 'מוצר, שיווק ועסקים (Business & Product)',
+      subtitle: 'מתמקד/ת באפיון מוצר, אסטרטגיה, גיוס לקוחות ומכירות',
+      icon: '📈',
+    },
+    {
+      id: 'domain_expert',
+      title: 'מומחה/ית תחום (Domain & Market Expert)',
+      subtitle: 'בעל/ת ניסיון מעמיק בתעשייה ספציפית (FinTech, AI, Health וכו\')',
       icon: '🧠',
-    },
-    {
-      id: 'specialist',
-      title: 'The Specialist',
-      subtitle: 'מומחה DevOps / עיצוב / שיווק ומכירות שמחפש מיזם קונקרטי',
-      icon: '🎯',
-    },
-    {
-      id: 'repeater',
-      title: 'The Repeater',
-      subtitle: 'יזם/ית סדרתי/ת עם מספר רעיונות ובוחר/ת מה לחשוף ולמי',
-      icon: '🚀',
     },
   ];
 
@@ -69,22 +63,22 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
         currentStep={currentStep}
         totalSteps={totalSteps}
         onBackPress={onBackPress}
-        title="מהי ההגדרה שהכי מתאימה לך?"
+        title="מה הכי מתאר אותך היום?"
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <Text style={styles.subtitle}>
-          בחירת התפקיד הראשי תעזור ל-AI להמליץ לך על השותפים והפרויקטים המתאימים ביותר
+          💡 זוהי העדפת UX רכה בלבד להתאמת התצוגה, ואינה מהווה מגבלה או הגדרת תפקיד קבועה במערכת.
         </Text>
 
         <View style={styles.rolesGrid}>
-          {roles.map((role) => {
-            const isSelected = selectedRole === role.id;
+          {intents.map((role) => {
+            const isSelected = selectedIntent === role.id;
             return (
               <TouchableOpacity
                 key={role.id}
                 style={[styles.roleCard, isSelected && styles.selectedCard]}
-                onPress={() => setSelectedRole(role.id)}
+                onPress={() => setSelectedIntent(role.id)}
                 activeOpacity={0.8}
               >
                 <View style={styles.cardHeader}>
@@ -102,7 +96,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
         </View>
       </ScrollView>
 
-      <WizardFooter onNext={() => onNext(selectedRole)} nextLabel="המשך לשלב הבא" />
+      <WizardFooter onNext={() => onNext(selectedIntent)} nextLabel="המשך לשלב הבא" />
     </SafeAreaView>
   );
 };

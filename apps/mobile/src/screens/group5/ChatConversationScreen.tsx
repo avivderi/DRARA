@@ -23,7 +23,8 @@ export interface ChatMessage {
 interface ChatConversationScreenProps {
   partnerName?: string;
   partnerAvatar?: string;
-  isConfirmedMatch?: boolean;
+  ideaTitle?: string;
+  isVettingMode?: boolean;
   messages?: ChatMessage[];
   onBackPress: () => void;
   onSendMessage: (text: string) => void;
@@ -56,6 +57,8 @@ const SAMPLE_MESSAGES: ChatMessage[] = [
 
 export const ChatConversationScreen: React.FC<ChatConversationScreenProps> = ({
   partnerName = 'אלון מזרחי',
+  ideaTitle = 'DRARA - Co-Founder Platform',
+  isVettingMode = false,
   messages = SAMPLE_MESSAGES,
   onBackPress,
   onSendMessage,
@@ -85,6 +88,15 @@ export const ChatConversationScreen: React.FC<ChatConversationScreenProps> = ({
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        {isVettingMode && (
+          <View style={styles.vettingBanner}>
+            <Text style={styles.vettingBannerTitle}>🔍 שיחת Deep Dive & Vetting</Text>
+            <Text style={styles.vettingBannerText}>
+              דיון מעמיק סביב המיזם &quot;{ideaTitle}&quot;. הוסף פרטים חסרים ובדוק התאמה הדדית לפני קביעת מפגש NFC Handshake.
+            </Text>
+          </View>
+        )}
+
         {chatMessages.map((msg) => (
           <View
             key={msg.id}
@@ -115,6 +127,28 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 20,
     gap: 10,
+  },
+  vettingBanner: {
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.primary,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+  },
+  vettingBannerTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.primary,
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+  vettingBannerText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.textSecondary,
+    textAlign: 'right',
   },
   messageBubble: {
     maxWidth: '80%',
