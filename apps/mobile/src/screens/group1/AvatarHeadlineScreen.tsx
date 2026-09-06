@@ -8,7 +8,6 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 
 import { WizardFooter } from '../../components/layout/footers/WizardFooter';
@@ -39,23 +38,26 @@ export const AvatarHeadlineScreen: React.FC<AvatarHeadlineScreenProps> = ({
 
   const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!headline.trim()) {
       setError('אנא הזן כותרת מקצועית מקצרת');
       return;
     }
     setError('');
     setLoading(true);
-    try {
-      await onNext({
+    Promise.resolve(
+      onNext({
         headline: headline.trim(),
         avatarUrl: avatarUrl.trim() || defaultAvatar,
+      }),
+    )
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'אירעה שגיאה בעדכון הפרופיל';
+        setError(msg);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } catch (err: any) {
-      setError(err?.message || 'אירעה שגיאה בעדכון הפרופיל');
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (

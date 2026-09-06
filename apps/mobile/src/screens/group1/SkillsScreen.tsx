@@ -77,20 +77,21 @@ export const SkillsScreen: React.FC<SkillsScreenProps> = ({
     if (error) setError('');
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (selectedSkills.length === 0) {
       setError('אנא בחר לפחות כישור או תחום מומחיות אחד');
       return;
     }
     setError('');
     setLoading(true);
-    try {
-      await onNext(selectedSkills);
-    } catch (err: any) {
-      setError(err?.message || 'אירעה שגיאה בשמירת הכישורים');
-    } finally {
-      setLoading(false);
-    }
+    Promise.resolve(onNext(selectedSkills))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'אירעה שגיאה בשמירת הכישורים';
+        setError(msg);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (

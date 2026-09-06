@@ -31,20 +31,21 @@ export const BioScreen: React.FC<BioScreenProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (bio.trim().length < 15) {
       setError('אנא כתוב לפחות 15 תווים על הניסיון והרקע שלך');
       return;
     }
     setError('');
     setLoading(true);
-    try {
-      await onNext(bio.trim());
-    } catch (err: any) {
-      setError(err?.message || 'אירעה שגיאה בשמירת ה-Bio');
-    } finally {
-      setLoading(false);
-    }
+    Promise.resolve(onNext(bio.trim()))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'אירעה שגיאה בשמירת ה-Bio';
+        setError(msg);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (

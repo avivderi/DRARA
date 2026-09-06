@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 
+import type { TabType } from './src/components/layout/footers/BottomTabBar';
 import { LoginScreen } from './src/screens/group1/LoginScreen';
 import { RoleSelectionScreen } from './src/screens/group1/RoleSelectionScreen';
 import { WelcomeScreen } from './src/screens/group1/WelcomeScreen';
@@ -16,7 +17,6 @@ import { AIScanLoadingScreen } from './src/screens/group2/AIScanLoadingScreen';
 import { MatchesFeedScreen } from './src/screens/group3/MatchesFeedScreen';
 import { NFCHandshakeScreen } from './src/screens/group4/NFCHandshakeScreen';
 import { NFCSuccessScreen } from './src/screens/group4/NFCSuccessScreen';
-import type { TabType } from './src/components/layout/footers/BottomTabBar';
 import { colors, fonts } from './src/theme/tokens';
 
 type ScreenId =

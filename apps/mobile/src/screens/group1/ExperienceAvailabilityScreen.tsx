@@ -47,16 +47,17 @@ export const ExperienceAvailabilityScreen: React.FC<ExperienceAvailabilityScreen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleNext = async () => {
+  const handleNext = () => {
     setError('');
     setLoading(true);
-    try {
-      await onNext({ experienceYears: experience, availability });
-    } catch (err: any) {
-      setError(err?.message || 'אירעה שגיאה בשמירת הזמינות והניסיון');
-    } finally {
-      setLoading(false);
-    }
+    Promise.resolve(onNext({ experienceYears: experience, availability }))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'אירעה שגיאה בשמירת הזמינות והניסיון';
+        setError(msg);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (

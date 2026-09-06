@@ -67,7 +67,7 @@ export const OfferingSeekingScreen: React.FC<OfferingSeekingScreenProps> = ({
     }
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (offeringTags.length === 0) {
       setError('אנא בחר לפחות תגית אחת למה שאתה מציע (Offering Tags)');
       return;
@@ -78,13 +78,14 @@ export const OfferingSeekingScreen: React.FC<OfferingSeekingScreenProps> = ({
     }
     setError('');
     setLoading(true);
-    try {
-      await onNext({ offeringTags, seekingTags });
-    } catch (err: any) {
-      setError(err?.message || 'אירעה שגיאה בשמירת התגיות');
-    } finally {
-      setLoading(false);
-    }
+    Promise.resolve(onNext({ offeringTags, seekingTags }))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'אירעה שגיאה בשמירת התגיות';
+        setError(msg);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
