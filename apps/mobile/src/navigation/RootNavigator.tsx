@@ -3,6 +3,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { BottomTabBar, TabType } from '../components/layout/footers/BottomTabBar';
+import { apiPatch, apiPost } from '../services/apiClient';
+import { loginWithOAuth } from '../services/authService';
+import { setTokens } from '../services/authStore';
 import { AvatarHeadlineScreen } from '../screens/group1/AvatarHeadlineScreen';
 import { BioScreen } from '../screens/group1/BioScreen';
 import { ExperienceAvailabilityScreen } from '../screens/group1/ExperienceAvailabilityScreen';
@@ -75,9 +78,20 @@ function OnboardingNavigator() {
       <OnboardingStack.Screen name="Welcome">
         {({ navigation }) => (
           <WelcomeScreen
-            onGoogleSignIn={() => navigation.navigate('RoleSelection')}
-            onGitHubSignIn={() => navigation.navigate('RoleSelection')}
+            onGoogleSignIn={async () => {
+              const success = await loginWithOAuth('google');
+              if (success) {
+                navigation.navigate('RoleSelection');
+              }
+            }}
+            onGitHubSignIn={async () => {
+              const success = await loginWithOAuth('github');
+              if (success) {
+                navigation.navigate('RoleSelection');
+              }
+            }}
             onEmailSignIn={() => navigation.navigate('Login')}
+            onOpenDebugMenu={() => navigation.getParent()?.navigate('DebugMenu')}
           />
         )}
       </OnboardingStack.Screen>
@@ -85,7 +99,12 @@ function OnboardingNavigator() {
         {({ navigation }) => (
           <LoginScreen
             onBackPress={() => navigation.goBack()}
-            onLoginSubmit={() => navigation.navigate('RoleSelection')}
+            onLoginSubmit={async () => {
+              const success = await loginWithOAuth('google');
+              if (success) {
+                navigation.navigate('RoleSelection');
+              }
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -103,7 +122,15 @@ function OnboardingNavigator() {
             currentStep={1}
             totalSteps={7}
             onBackPress={() => navigation.goBack()}
-            onNext={() => navigation.navigate('OfferingSeeking')}
+            onNext={async (roleIntent) => {
+              const expMap: Record<string, 'senior' | 'mid' | 'junior'> = {
+                technical: 'senior',
+                business_product: 'mid',
+                domain_expert: 'mid',
+              };
+              await apiPatch('/users/me', { experience_level: expMap[roleIntent] || 'mid' }).catch(() => {});
+              navigation.navigate('OfferingSeeking');
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -113,7 +140,10 @@ function OnboardingNavigator() {
             currentStep={2}
             totalSteps={7}
             onBackPress={() => navigation.goBack()}
-            onNext={() => navigation.navigate('Skills')}
+            onNext={async ({ offeringTags, seekingTags }) => {
+              await apiPatch('/users/me', { offering_tags: offeringTags, seeking_tags: seekingTags }).catch(() => {});
+              navigation.navigate('Skills');
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -123,7 +153,10 @@ function OnboardingNavigator() {
             currentStep={3}
             totalSteps={7}
             onBackPress={() => navigation.goBack()}
-            onNext={() => navigation.navigate('ExperienceAvailability')}
+            onNext={async (skills) => {
+              await apiPatch('/users/me', { skills }).catch(() => {});
+              navigation.navigate('ExperienceAvailability');
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -133,7 +166,12 @@ function OnboardingNavigator() {
             currentStep={4}
             totalSteps={7}
             onBackPress={() => navigation.goBack()}
-            onNext={() => navigation.navigate('Bio')}
+            onNext={async ({ experienceYears, availability }) => {
+              const expLevel = experienceYears.includes('5') || experienceYears.includes('10') ? 'senior' : 'mid';
+              const commitment = availability.includes('full') ? 'full-time' : 'part-time';
+              await apiPatch('/users/me', { experience_level: expLevel, commitment_level: commitment }).catch(() => {});
+              navigation.navigate('Bio');
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -143,7 +181,10 @@ function OnboardingNavigator() {
             currentStep={5}
             totalSteps={7}
             onBackPress={() => navigation.goBack()}
-            onNext={() => navigation.navigate('AvatarHeadline')}
+            onNext={async (bio) => {
+              await apiPatch('/users/me', { bio }).catch(() => {});
+              navigation.navigate('AvatarHeadline');
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -153,7 +194,10 @@ function OnboardingNavigator() {
             currentStep={6}
             totalSteps={7}
             onBackPress={() => navigation.goBack()}
-            onNext={() => navigation.navigate('ProfileCompletionSuccess')}
+            onNext={async ({ headline, avatarUrl }) => {
+              await apiPatch('/users/me', { headline, avatar_url: avatarUrl }).catch(() => {});
+              navigation.navigate('ProfileCompletionSuccess');
+            }}
           />
         )}
       </OnboardingStack.Screen>
@@ -323,7 +367,7 @@ function HandshakeNavigator() {
       <HandshakeStack.Screen name="MeetingFeedback">
         {({ navigation }) => (
           <MeetingFeedbackScreen
-            partnerName="אלון מזרחי"
+            partnerName="שותף"
             onBackPress={() => navigation.goBack()}
             onSubmitFeedback={async () => { navigation.navigate('NFCPreparation'); }}
             onProceedToNFC={() => navigation.navigate('NFCPreparation')}
@@ -342,7 +386,7 @@ function HandshakeNavigator() {
         {({ navigation }) => (
           <NFCHandshakeScreen
             matchId="m1"
-            partnerName="אלון מזרחי"
+            partnerName="שותף"
             onBackPress={() => navigation.goBack()}
             onHandshakeSuccess={() => navigation.navigate('NFCSuccess')}
           />
@@ -351,7 +395,7 @@ function HandshakeNavigator() {
       <HandshakeStack.Screen name="NFCSuccess">
         {({ navigation }: any) => (
           <NFCSuccessScreen
-            partnerName="אלון מזרחי"
+            partnerName="שותף"
             permissionsGranted={['code_repo', 'contact_info']}
             onOpenWorkspace={() => navigation.replace('WorkspaceFlow', { screen: 'WorkspaceOverview', params: { workspaceId: 'demo' } })}
           />
@@ -549,16 +593,76 @@ function MainTabNavigator() {
   );
 }
 
+import { useState, useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { isAuthenticated, clearTokens } from '../services/authStore';
+import { apiClient } from '../services/apiClient';
+import { colors } from '../theme/tokens';
+import { DebugMenuScreen } from '../screens/debug/DebugMenuScreen';
+
 // Root Stack Navigator (Onboarding, MainApp, IdeaUpload, Handshake, Group5Flow, WorkspaceFlow)
 export function RootNavigator() {
+  const [loading, setLoading] = useState(true);
+  const [initialRoute, setInitialRoute] = useState<'Onboarding' | 'MainApp'>('Onboarding');
+
+  useEffect(() => {
+    async function checkAuthBoot() {
+      try {
+        const authed = await isAuthenticated();
+        if (authed) {
+          const res = await apiClient.get<Record<string, unknown>>('/users/me');
+          if (res) {
+            setInitialRoute('MainApp');
+          } else {
+            await clearTokens();
+            setInitialRoute('Onboarding');
+          }
+        } else {
+          setInitialRoute('Onboarding');
+        }
+      } catch {
+        setInitialRoute('Onboarding');
+      } finally {
+        setLoading(false);
+      }
+    }
+    void checkAuthBoot();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Onboarding">
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
       <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
       <Stack.Screen name="MainApp" component={MainTabNavigator} />
       <Stack.Screen name="IdeaUpload" component={IdeaUploadNavigator} />
       <Stack.Screen name="Handshake" component={HandshakeNavigator} />
       <Stack.Screen name="Group5Flow" component={Group5Navigator} />
       <Stack.Screen name="WorkspaceFlow" component={WorkspaceNavigator} />
+      {__DEV__ && (
+        <Stack.Screen name="DebugMenu">
+          {({ navigation }: any) => (
+            <DebugMenuScreen
+              onBackPress={() => navigation.goBack()}
+              onNavigateToScreen={(routeName, params) => {
+                if (routeName === 'Onboarding') navigation.navigate('Onboarding');
+                else if (routeName === 'IdeaUpload') navigation.navigate('IdeaUpload');
+                else if (routeName === 'MainApp') navigation.navigate('MainApp');
+                else if (routeName === 'Handshake') navigation.navigate('Handshake');
+                else if (routeName === 'Group5Flow') navigation.navigate('Group5Flow');
+                else if (routeName === 'WorkspaceFlow') navigation.navigate('WorkspaceFlow');
+                else navigation.navigate(routeName, params);
+              }}
+            />
+          )}
+        </Stack.Screen>
+      )}
     </Stack.Navigator>
   );
 }

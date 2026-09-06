@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './authStore';
@@ -6,10 +7,14 @@ export function getApiBaseUrl(): string {
   if (process.env['EXPO_PUBLIC_API_URL']) {
     return process.env['EXPO_PUBLIC_API_URL'];
   }
+  const extraApiUrl = Constants.expoConfig?.extra?.apiUrl as string | undefined;
+  if (extraApiUrl) {
+    return extraApiUrl;
+  }
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:3001';
   }
-  return 'http://localhost:3001';
+  return 'http://127.0.0.1:3001';
 }
 
 export interface RequestOptions {

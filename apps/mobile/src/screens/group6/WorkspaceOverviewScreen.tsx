@@ -19,8 +19,8 @@ interface WorkspaceOverviewScreenProps {
 }
 
 export const WorkspaceOverviewScreen: React.FC<WorkspaceOverviewScreenProps> = ({
-  ideaTitle = 'DRARA - Co-Founder Platform',
-  partnerName = 'אלון מזרחי',
+  ideaTitle = 'מיזם',
+  partnerName = 'שותף',
   onBackPress,
   onNavigateSubTab,
 }) => {

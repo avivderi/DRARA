@@ -13,6 +13,8 @@ export interface User {
   experience_level: ExperienceLevel | null;
   commitment_level: CommitmentLevel | null;
   bio: string | null;
+  headline?: string | null;
+  availability_hours_per_week?: number | null;
   github_username: string | null;
   device_public_key: string | null;
   offering_tags?: string[] | null;
@@ -29,7 +31,7 @@ export type CreateUserInput = Pick<User, 'name' | 'email' | 'provider' | 'provid
 };
 
 export type UpdateUserInput = Partial<
-  Pick<User, 'name' | 'avatar_url' | 'skills' | 'experience_level' | 'commitment_level' | 'bio' | 'offering_tags' | 'seeking_tags'>
+  Pick<User, 'name' | 'avatar_url' | 'skills' | 'experience_level' | 'commitment_level' | 'bio' | 'headline' | 'availability_hours_per_week' | 'offering_tags' | 'seeking_tags'>
 > & {
   offering_embedding?: number[] | null;
   seeking_embedding?: number[] | null;

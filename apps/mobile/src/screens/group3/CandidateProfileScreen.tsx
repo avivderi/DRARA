@@ -15,7 +15,7 @@ import { colors, fonts } from '../../theme/tokens';
 export interface CandidateProfileData {
   id: string;
   name: string;
-  avatarUrl: string;
+  avatarUrl?: string;
   headline: string;
   bio: string;
   role: string;
@@ -28,6 +28,8 @@ export interface CandidateProfileData {
   githubRepoFullName?: string;
 }
 
+import { UserAvatar } from '../../components/common/UserAvatar';
+
 interface CandidateProfileScreenProps {
   candidate?: CandidateProfileData;
   onBackPress: () => void;
@@ -35,24 +37,23 @@ interface CandidateProfileScreenProps {
   onViewDeepDive: () => void;
 }
 
-const DEFAULT_CANDIDATE: CandidateProfileData = {
-  id: 'cand-1',
-  name: 'אלון מזרחי',
-  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-  headline: 'Senior Cloud Infrastructure & DevOps Engineer (8y exp)',
-  bio: 'מפתח תשתיות ענן בכיר, מומחה ב-Kubernetes, AWS, Go ו-Microservices. הובלתי ארכיטקטורת ענן בסטארטאפ שצמח מ-0 ל-10M משתמשים. מחפש שותף/ה להובלת המוצר והמכירות.',
-  role: 'The Builder',
-  experienceYears: '5-10 שנים',
-  availability: 'משרה מלאה (40+ שעות)',
-  offeringTags: ['Backend', 'DevOps', 'AWS', 'Kubernetes', 'Go'],
-  seekingTags: ['Product', 'Marketing', 'Sales'],
-  similarityScore: 0.8842,
-  aiRationale: 'התאמה סמנטית גבוהה ביותר (88.4%): אלון מביא ניסיון מעמיק ב-Backend & DevOps שחסר ברעיון שלך, בעוד אתה מביא את הובלת המוצר והשיווק שהוא מחפש.',
-  githubRepoFullName: 'alonm/k8s-cloud-toolkit',
+const FALLBACK_CANDIDATE: CandidateProfileData = {
+  id: 'cand-none',
+  name: 'מועמד ללא שם',
+  avatarUrl: undefined,
+  headline: 'פרופיל מועמד',
+  bio: 'טרם הוזן פירוט אודות המועמד.',
+  role: 'Co-Founder',
+  experienceYears: 'לא מצוין',
+  availability: 'גמיש',
+  offeringTags: [],
+  seekingTags: [],
+  similarityScore: 0.8,
+  aiRationale: 'התאמה סמנטית מבוססת תחומי עניין וכישורים משלימים.',
 };
 
 export const CandidateProfileScreen: React.FC<CandidateProfileScreenProps> = ({
-  candidate = DEFAULT_CANDIDATE,
+  candidate = FALLBACK_CANDIDATE,
   onBackPress,
   onRequestIntro,
   onViewDeepDive,
@@ -65,7 +66,7 @@ export const CandidateProfileScreen: React.FC<CandidateProfileScreenProps> = ({
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
-          <Image source={{ uri: candidate.avatarUrl }} style={styles.avatar} />
+          <UserAvatar name={candidate.name} avatarUrl={candidate.avatarUrl} size={72} />
           <Text style={styles.name}>{candidate.name}</Text>
           <Text style={styles.headline}>{candidate.headline}</Text>
 

@@ -10,6 +10,7 @@ import {
 
 import { SingleCtaFooter } from '../../components/layout/footers/SingleCtaFooter';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiPost } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 interface NFCHandshakeScreenProps {
@@ -34,40 +35,22 @@ export const NFCHandshakeScreen: React.FC<NFCHandshakeScreenProps> = ({
 
     try {
       // 1. Initiate challenge via API
-      const initRes = await fetch('http://localhost:3001/handshake/initiate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId }),
-      });
-
-      if (!initRes.ok) {
-        throw new Error('הופעל צאלנג חלקי - אנא נסה שוב');
-      }
-
-      const { challengeToken } = (await initRes.json()) as { challengeToken: string };
+      const { challengeToken } = await apiPost<{ challengeToken: string }>('/handshake/initiate', { matchId });
 
       // 2. Simulate NFC physical tap & verification with API
       setTimeout(async () => {
         try {
-          const verifyRes = await fetch('http://localhost:3001/handshake/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              matchId,
-              signerUserId: 'simulated_partner_user_id',
-              challengeToken,
-              nfcTokenSignature: 'nfc_sig_valid_cryptographic_payload_1234567890',
-              locationHash: 'loc_tlv_center_hash',
-              permissionsGranted: ['repo_access', 'workspace_access', 'full_description'],
-            }),
+          await apiPost('/handshake/verify', {
+            matchId,
+            signerUserId: 'simulated_partner_user_id',
+            challengeToken,
+            nfcTokenSignature: 'nfc_sig_valid_cryptographic_payload_1234567890',
+            locationHash: 'loc_tlv_center_hash',
+            permissionsGranted: ['repo_access', 'workspace_access', 'full_description'],
           });
 
-          if (verifyRes.ok) {
-            onHandshakeSuccess(['repo_access', 'workspace_access', 'full_description']);
-          } else {
             // Direct callback for smooth mobile UX
             onHandshakeSuccess(['repo_access', 'workspace_access', 'full_description']);
-          }
         } catch {
           onHandshakeSuccess(['repo_access', 'workspace_access', 'full_description']);
         } finally {

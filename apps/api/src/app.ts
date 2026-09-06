@@ -16,6 +16,24 @@ import { sessionRouter } from './routes/session.routes';
 import { usersRouter } from './routes/users.routes';
 import { createWorkspacesRouter } from './routes/workspaces.routes';
 
+import fs from 'fs';
+import path from 'path';
+
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+const requestLogPath = path.join(logsDir, 'requests.log');
+
+function sanitizeBody(body: unknown): string {
+  if (!body || typeof body !== 'object') return '';
+  const copy = { ...(body as Record<string, unknown>) };
+  for (const key of ['password', 'access_token', 'refresh_token', 'token', 'client_secret']) {
+    if (key in copy) copy[key] = '[REDACTED]';
+  }
+  return JSON.stringify(copy);
+}
+
 export function createApp(): Application {
   const app = express();
 
@@ -32,9 +50,20 @@ export function createApp(): Application {
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: true }));
 
-  // ── Request logging ──────────────────────────────────────
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    logger.info({ method: req.method, path: req.path }, 'Incoming request');
+  // ── Request logging to requests.log ──────────────────────
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const timestamp = new Date().toISOString();
+      const logLine = `[${timestamp}] ${req.method} ${req.originalUrl} - IP: ${clientIp} - Status: ${res.statusCode} (${duration}ms) - Body: ${sanitizeBody(req.body)}\n`;
+
+      fs.appendFile(requestLogPath, logLine, () => {});
+      logger.info({ method: req.method, path: req.originalUrl, status: res.statusCode, duration }, 'Incoming request');
+    });
+
     next();
   });
 

@@ -39,8 +39,8 @@ interface DecisionLogScreenProps {
 
 export const DecisionLogScreen: React.FC<DecisionLogScreenProps> = ({
   workspaceId = 'demo',
-  ideaTitle = 'DRARA - Co-Founder Platform',
-  partnerName = 'אלון מזרחי',
+  ideaTitle = 'מיזם',
+  partnerName = 'שותף',
   onBackPress,
   onNavigateSubTab,
 }) => {

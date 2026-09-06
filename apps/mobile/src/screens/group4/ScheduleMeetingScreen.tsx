@@ -19,7 +19,7 @@ interface ScheduleMeetingScreenProps {
 }
 
 export const ScheduleMeetingScreen: React.FC<ScheduleMeetingScreenProps> = ({
-  partnerName = 'אלון מזרחי',
+  partnerName = 'שותף',
   onBackPress,
   onScheduleConfirm,
 }) => {

@@ -54,8 +54,8 @@ const SAMPLE_MILESTONES: MilestoneItem[] = [
 
 export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({
   workspaceId,
-  ideaTitle = 'DRARA - Co-Founder Platform',
-  partnerName = 'אלון מזרחי',
+  ideaTitle = 'מיזם',
+  partnerName = 'שותף',
   onBackPress,
   onNavigateSubTab,
 }) => {

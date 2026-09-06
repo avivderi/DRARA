@@ -123,4 +123,57 @@ export const usersController = {
     const { device_public_key: _, provider_id: __, ...safeUser } = updated;
     res.json(safeUser);
   },
+
+  getPartnerships: async (req: Request, res: Response): Promise<void> => {
+    const userId = req.userId;
+    if (!userId) throw AppError.unauthorized();
+
+    const rows = await db('matches')
+      .leftJoin('ideas', 'matches.idea_id', 'ideas.id')
+      .leftJoin('workspaces', 'matches.id', 'workspaces.match_id')
+      .leftJoin('handshake_events', 'matches.id', 'handshake_events.match_id')
+      .leftJoin('users as u1', 'matches.user1_id', 'u1.id')
+      .leftJoin('users as u2', 'matches.user2_id', 'u2.id')
+      .where('matches.status', 'confirmed')
+      .andWhere((builder) => {
+        void builder.where('matches.user1_id', userId).orWhere('matches.user2_id', userId);
+      })
+      .select(
+        'matches.id as match_id',
+        'matches.created_at as match_created_at',
+        'ideas.title as idea_title',
+        'ideas.summary as idea_summary',
+        'workspaces.id as workspace_id',
+        'handshake_events.created_at as handshake_date',
+        'matches.user1_id',
+        'matches.user2_id',
+        'u1.name as u1_name',
+        'u1.avatar_url as u1_avatar',
+        'u2.name as u2_name',
+        'u2.avatar_url as u2_avatar',
+      );
+
+    const partnerships = rows.map((r) => {
+      const isUser1 = r.user1_id === userId;
+      const partnerName = isUser1 ? r.u2_name : r.u1_name;
+      const partnerAvatar = isUser1 ? r.u2_avatar : r.u1_avatar;
+      const myAvatar = isUser1 ? r.u1_avatar : r.u2_avatar;
+
+      return {
+        id: r.match_id,
+        workspaceId: r.workspace_id ?? null,
+        ideaTitle: r.idea_title ?? 'Co-Founding Project',
+        tagline: r.idea_summary ?? 'Confirmed Co-Founding Partnership',
+        partnerName: partnerName ?? 'Co-Founder Partner',
+        partnerAvatar: partnerAvatar ?? null,
+        myAvatar: myAvatar ?? null,
+        handshakeDate: r.handshake_date
+          ? new Date(r.handshake_date).toLocaleDateString('he-IL')
+          : new Date(r.match_created_at).toLocaleDateString('he-IL'),
+        isConfirmed: true,
+      };
+    });
+
+    res.json({ partnerships });
+  },
 };

@@ -18,7 +18,7 @@ interface NFCPreparationScreenProps {
 }
 
 export const NFCPreparationScreen: React.FC<NFCPreparationScreenProps> = ({
-  partnerName = 'אלון מזרחי',
+  partnerName = 'שותף',
   onBackPress,
   onStartTap,
 }) => {

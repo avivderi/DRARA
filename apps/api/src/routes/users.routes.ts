@@ -9,4 +9,5 @@ usersRouter.use(requireAuth);
 
 usersRouter.get('/me', usersController.getMe);
 usersRouter.get('/me/full-profile', usersController.getFullProfile);
+usersRouter.get('/me/partnerships', usersController.getPartnerships);
 usersRouter.patch('/me', usersController.updateMe);

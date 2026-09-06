@@ -68,8 +68,8 @@ export const PublicFeedScreen: React.FC<PublicFeedScreenProps> = ({
             const mapped: PublicIdeaItem[] = res.ideas.map((item) => ({
               id: item.id,
               title: item.title || 'מיזם ללא שם',
-              ownerName: item.owner_name || item.ownerName || 'מייתר לא ידוע',
-              ownerAvatar: item.owner_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+              ownerName: item.owner_name || item.ownerName || 'מייזם',
+              ownerAvatar: item.owner_avatar || '',
               repoFullName: item.github_repo_full_name || item.repoFullName,
               readinessScore: item.readiness_score || item.readinessScore || 8,
               tags: item.tags || item.offering_tags || ['SaaS', 'AI'],

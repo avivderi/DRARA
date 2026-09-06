@@ -52,10 +52,14 @@ passport.use(
 export const authRouter = Router();
 
 // ── Google OAuth ─────────────────────────────────────────
-authRouter.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false }),
-);
+authRouter.get('/google', (req, res, next) => {
+  const redirectUri = req.query['redirect_uri'] as string | undefined;
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+    state: redirectUri,
+  })(req, res, next);
+});
 
 authRouter.get(
   '/google/callback',
@@ -64,10 +68,14 @@ authRouter.get(
 );
 
 // ── GitHub OAuth ─────────────────────────────────────────
-authRouter.get(
-  '/github',
-  passport.authenticate('github', { scope: ['user:email', 'read:user'], session: false }),
-);
+authRouter.get('/github', (req, res, next) => {
+  const redirectUri = req.query['redirect_uri'] as string | undefined;
+  passport.authenticate('github', {
+    scope: ['user:email', 'read:user'],
+    session: false,
+    state: redirectUri,
+  })(req, res, next);
+});
 
 authRouter.get(
   '/github/callback',

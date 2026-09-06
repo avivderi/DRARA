@@ -13,19 +13,20 @@ import {
 import { WizardFooter } from '../../components/layout/footers/WizardFooter';
 import { WizardHeader } from '../../components/layout/headers/WizardHeader';
 import { colors, fonts } from '../../theme/tokens';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 interface AvatarHeadlineScreenProps {
-  currentStep: number;
-  totalSteps: number;
+  currentStep?: number;
+  totalSteps?: number;
   initialHeadline?: string;
   initialAvatarUrl?: string;
-  onBackPress: () => void;
+  onBackPress?: () => void;
   onNext: (data: { headline: string; avatarUrl: string }) => Promise<void> | void;
 }
 
 export const AvatarHeadlineScreen: React.FC<AvatarHeadlineScreenProps> = ({
-  currentStep,
-  totalSteps,
+  currentStep = 6,
+  totalSteps = 7,
   initialHeadline = '',
   initialAvatarUrl = '',
   onBackPress,
@@ -35,8 +36,6 @@ export const AvatarHeadlineScreen: React.FC<AvatarHeadlineScreenProps> = ({
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
 
   const handleNext = () => {
     if (!headline.trim()) {
@@ -48,7 +47,7 @@ export const AvatarHeadlineScreen: React.FC<AvatarHeadlineScreenProps> = ({
     Promise.resolve(
       onNext({
         headline: headline.trim(),
-        avatarUrl: avatarUrl.trim() || defaultAvatar,
+        avatarUrl: avatarUrl.trim(),
       }),
     )
       .catch((err: unknown) => {
@@ -75,24 +74,17 @@ export const AvatarHeadlineScreen: React.FC<AvatarHeadlineScreenProps> = ({
         </Text>
 
         <View style={styles.avatarSection}>
-          <Image
-            source={{ uri: avatarUrl.trim() || defaultAvatar }}
-            style={styles.avatarImage}
-          />
+          <UserAvatar size={100} avatarUrl={avatarUrl.trim() || null} />
           <TouchableOpacity
             style={styles.changeAvatarBtn}
             onPress={() => {
-              // Toggle sample avatars for demonstration
-              const samples = [
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
-              ];
-              const nextIndex = (samples.indexOf(avatarUrl) + 1) % samples.length;
-              setAvatarUrl(samples[nextIndex]);
+              // Optional avatar URL input or clear
+              if (avatarUrl) {
+                setAvatarUrl('');
+              }
             }}
           >
-            <Text style={styles.changeAvatarText}>📷 החלף תמונה</Text>
+            <Text style={styles.changeAvatarText}>{avatarUrl ? '🗑️ הסר תמונה' : '📷 העלאת תמונה'}</Text>
           </TouchableOpacity>
         </View>
 

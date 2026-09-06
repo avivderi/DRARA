@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 
+import { UserAvatar } from '../../components/common/UserAvatar';
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
 import { apiGet } from '../../services/apiClient';
@@ -17,7 +18,7 @@ import { colors, fonts } from '../../theme/tokens';
 export interface ChatThread {
   id: string;
   partnerName: string;
-  partnerAvatar: string;
+  partnerAvatar?: string;
   lastMessage: string;
   timestamp: string;
   unreadCount: number;
@@ -50,7 +51,7 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({
               return {
                 id: String(c['id'] ?? c['threadId'] ?? ''),
                 partnerName: String(c['partner_name'] ?? c['partnerName'] ?? 'שותף'),
-                partnerAvatar: String(c['partner_avatar'] ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+                partnerAvatar: c['partner_avatar'] ? String(c['partner_avatar']) : undefined,
                 lastMessage: String(c['last_message'] ?? c['lastMessage'] ?? 'אין הודעות קודמות'),
                 timestamp: typeof c['updated_at'] === 'string'
                   ? new Date(c['updated_at']).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
@@ -82,7 +83,7 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({
               onPress={() => onSelectThread(thread.id)}
               activeOpacity={0.8}
             >
-              <Image source={{ uri: thread.partnerAvatar }} style={styles.avatar} />
+              <UserAvatar name={thread.partnerName} avatarUrl={thread.partnerAvatar} size={52} />
 
               <View style={styles.threadContent}>
                 <View style={styles.threadHeader}>

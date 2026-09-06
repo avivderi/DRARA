@@ -16,7 +16,7 @@ import { colors, fonts } from '../../theme/tokens';
 
 export interface UserProfileData {
   name: string;
-  avatarUrl: string;
+  avatarUrl?: string | null;
   headline: string;
   bio: string;
   role: string;
@@ -36,16 +36,16 @@ interface UserProfileScreenProps {
 }
 
 const DEFAULT_PROFILE: UserProfileData = {
-  name: 'אביב דרי',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-  headline: 'Fullstack Architect & AI Agent Builder',
-  bio: 'מפתח מערכות ענן ואינטליגנציה מלאכותית. הקמתי מוצרים מבוססי AI, pgvector ו-Microservices. מחפש שותף/ה להובלת השיווק והמכירות.',
-  role: 'The Builder',
-  experienceYears: '5-10 שנים',
-  availability: 'משרה מלאה (40+ שעות)',
-  offeringTags: ['Backend', 'DevOps', 'AWS', 'Python', 'AI / ML'],
-  seekingTags: ['Marketing', 'B2B Sales', 'Product Strategy'],
-  githubUsername: 'avivderi',
+  name: 'משתמש חדש',
+  avatarUrl: null,
+  headline: 'הגדר את הכותרת המקצועית שלך',
+  bio: 'עדיין לא מולא פיץ׳ אישי',
+  role: 'יזם',
+  experienceYears: '',
+  availability: '',
+  offeringTags: [],
+  seekingTags: [],
+  githubUsername: '',
 };
 
 export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({

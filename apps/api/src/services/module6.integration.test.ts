@@ -215,4 +215,30 @@ describe('Module 6 Integration Tests (Live PostgreSQL DB)', () => {
     const overview = await workspaceService.getWorkspaceOverview(workspaceId, userBId);
     assert.equal(overview.equity_summary.topics_discussed, 1);
   });
+
+  it('DoD 5: Partnerships API returns confirmed match for user', async () => {
+    const rows = await db('matches')
+      .leftJoin('ideas', 'matches.idea_id', 'ideas.id')
+      .leftJoin('workspaces', 'matches.id', 'workspaces.match_id')
+      .leftJoin('handshake_events', 'matches.id', 'handshake_events.match_id')
+      .leftJoin('users as u1', 'matches.user1_id', 'u1.id')
+      .leftJoin('users as u2', 'matches.user2_id', 'u2.id')
+      .where('matches.status', 'confirmed')
+      .andWhere((builder) => {
+        void builder.where('matches.user1_id', userAId).orWhere('matches.user2_id', userAId);
+      })
+      .select(
+        'matches.id as match_id',
+        'ideas.title as idea_title',
+        'workspaces.id as workspace_id',
+        'matches.user1_id',
+        'matches.user2_id',
+        'u1.name as u1_name',
+        'u2.name as u2_name',
+      );
+
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].match_id, matchId);
+    assert.equal(rows[0].workspace_id, workspaceId);
+  });
 });

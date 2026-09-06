@@ -26,15 +26,15 @@ interface IdeaBoardScreenProps {
 }
 
 const SAMPLE_TASKS: BoardTask[] = [
-  { id: 't1', title: 'הקמת תשתית Docker & CI/CD', assignee: 'אלון (DevOps)', status: 'in_progress' },
-  { id: 't2', title: 'אפיון מסכי האפליקציה ב-React Native', assignee: 'אביב (Product)', status: 'done' },
-  { id: 't3', title: 'אינטגרציה ל-Voyage AI Embedding API', assignee: 'אביב (Backend)', status: 'done' },
-  { id: 't4', title: 'בדיקת תאימות NFC במכשירי iOS', assignee: 'אלון (Mobile)', status: 'todo' },
+  { id: 't1', title: 'הקמת תשתית Docker & CI/CD', assignee: 'תשתיות', status: 'in_progress' },
+  { id: 't2', title: 'אפיון מסכי האפליקציה ב-React Native', assignee: 'מוצר', status: 'done' },
+  { id: 't3', title: 'אינטגרציה ל-Embedding API', assignee: 'Backend', status: 'done' },
+  { id: 't4', title: 'בדיקת תאימות NFC', assignee: 'Mobile', status: 'todo' },
 ];
 
 export const IdeaBoardScreen: React.FC<IdeaBoardScreenProps> = ({
-  ideaTitle = 'DRARA - Co-Founder Platform',
-  partnerName = 'אלון מזרחי',
+  ideaTitle = 'מיזם',
+  partnerName = 'שותף',
   onBackPress,
   onNavigateSubTab,
 }) => {

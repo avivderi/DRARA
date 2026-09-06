@@ -37,8 +37,8 @@ const DEFAULT_EQUITY: EquitySplit = {
 
 export const EquityFrameworkScreen: React.FC<EquityFrameworkScreenProps> = ({
   workspaceId,
-  ideaTitle = 'DRARA - Co-Founder Platform',
-  partnerName = 'אלון מזרחי',
+  ideaTitle = 'מיזם',
+  partnerName = 'שותף',
   equitySplit: initialEquity = DEFAULT_EQUITY,
   onBackPress,
   onNavigateSubTab,

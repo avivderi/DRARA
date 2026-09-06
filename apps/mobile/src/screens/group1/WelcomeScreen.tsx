@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,27 +9,63 @@ import {
 } from 'react-native';
 
 import { colors, fonts } from '../../theme/tokens';
-
+import { DraraLogo } from '../../components/common/DraraLogo';
+import { initAuthFromUrl } from '../../services/authService';
+import { isAuthenticated } from '../../services/authStore';
 
 interface WelcomeScreenProps {
   onGoogleSignIn: () => void;
   onGitHubSignIn: () => void;
   onEmailSignIn: () => void;
+  onOpenDebugMenu?: () => void;
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   onGoogleSignIn,
   onGitHubSignIn,
   onEmailSignIn,
+  onOpenDebugMenu,
 }) => {
+  useEffect(() => {
+    initAuthFromUrl().then((success) => {
+      if (success) {
+        onGoogleSignIn();
+        return;
+      }
+      void isAuthenticated().then((authed) => {
+        if (authed) {
+          onGoogleSignIn();
+        }
+      });
+    });
+  }, []);
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Brand Logo Display */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', marginVertical: 16 }}
+          activeOpacity={0.9}
+          onLongPress={onOpenDebugMenu}
+        >
+          <DraraLogo fontSize={44} />
+        </TouchableOpacity>
+
         {/* Brand Monogram Tag */}
         <View style={styles.tagBadge}>
           <View style={styles.tagDot} />
-          <Text style={styles.tagText}>DRARA PLATFORM</Text>
+          <Text style={styles.tagText}>drara platform</Text>
         </View>
+
+        {__DEV__ && onOpenDebugMenu && (
+          <TouchableOpacity
+            style={styles.devBadge}
+            onPress={onOpenDebugMenu}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.devBadgeText}>🛠️ DEV: תפריט 49 מסכים</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Minimal Vector Illustration */}
         <View style={styles.illustrationContainer}>
@@ -217,5 +253,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textDecorationLine: 'underline',
+  },
+  devBadge: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#F59E0B',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  devBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#B45309',
   },
 });

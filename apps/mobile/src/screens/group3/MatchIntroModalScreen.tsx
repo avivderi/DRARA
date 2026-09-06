@@ -7,11 +7,11 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
-  Image,
 } from 'react-native';
 
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
 import { colors, fonts } from '../../theme/tokens';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 interface MatchIntroModalScreenProps {
   candidateName?: string;
@@ -23,15 +23,15 @@ interface MatchIntroModalScreenProps {
 }
 
 export const MatchIntroModalScreen: React.FC<MatchIntroModalScreenProps> = ({
-  candidateName = 'אלון מזרחי',
-  candidateAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-  matchScore = 0.8842,
+  candidateName = 'מועמד',
+  candidateAvatar,
+  matchScore = 0.85,
   onBackPress,
   onSendIntro,
   onScheduleNFC,
 }) => {
   const [message, setMessage] = useState(
-    `היי ${candidateName}, ראיתי את ההתאמה המעולה בינינו ב-DRARA (התאמה סמנטית של ${Math.round(matchScore * 100)}%). אשמח שנשוחח ואף נקבע מפגש NFC Handshake!`,
+    `היי ${candidateName}, ראיתי את ההתאמה בינינו ב-DRARA (התאמה סמנטית של ${Math.round(matchScore * 100)}%). אשמח שנשוחח ואף נקבע מפגש NFC Handshake!`,
   );
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -44,13 +44,12 @@ export const MatchIntroModalScreen: React.FC<MatchIntroModalScreenProps> = ({
     }
     setError('');
     setLoading(true);
-    Promise.resolve(onSendIntro(message.trim()))
+    Promise.resolve(onSendIntro(message))
       .then(() => {
         setSent(true);
       })
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : 'אירעה שגיאה בשליחת הפנייה';
-        setError(msg);
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'שגיאה בשליחת הפנייה');
       })
       .finally(() => {
         setLoading(false);
@@ -63,7 +62,7 @@ export const MatchIntroModalScreen: React.FC<MatchIntroModalScreenProps> = ({
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.candidateHeader}>
-          <Image source={{ uri: candidateAvatar }} style={styles.avatar} />
+          <UserAvatar name={candidateName} avatarUrl={candidateAvatar} size={64} />
           <Text style={styles.candidateName}>{candidateName}</Text>
           <Text style={styles.matchBadge}>
             ⭐ {Math.round(matchScore * 100)}% Cosine Similarity

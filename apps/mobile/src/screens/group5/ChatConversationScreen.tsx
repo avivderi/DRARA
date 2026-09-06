@@ -33,9 +33,9 @@ interface ChatConversationScreenProps {
 }
 
 export const ChatConversationScreen: React.FC<ChatConversationScreenProps> = ({
-  threadId = 'thread-1',
-  partnerName = 'אלון מזרחי',
-  ideaTitle = 'DRARA - Co-Founder Platform',
+  threadId = '',
+  partnerName = 'שותף',
+  ideaTitle = 'מיזם',
   isVettingMode = false,
   messages: propMessages,
   onBackPress,

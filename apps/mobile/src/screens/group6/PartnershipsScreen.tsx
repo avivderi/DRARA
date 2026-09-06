@@ -11,6 +11,7 @@ import {
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
 import { BrandHeader } from '../../components/layout/headers/BrandHeader';
+import { UserAvatar } from '../../components/common/UserAvatar';
 import { apiClient } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
@@ -19,8 +20,8 @@ export interface PartnershipItem {
   ideaTitle: string;
   tagline: string;
   partnerName: string;
-  partnerAvatar: string;
-  myAvatar: string;
+  partnerAvatar?: string;
+  myAvatar?: string;
   handshakeDate: string;
   isConfirmed: boolean;
 }
@@ -33,29 +34,6 @@ interface PartnershipsScreenProps {
   onProfilePress?: () => void;
 }
 
-const SAMPLE_PARTNERSHIPS: PartnershipItem[] = [
-  {
-    id: 'p1',
-    ideaTitle: 'DRARA - Co-Founder Matchmaker',
-    tagline: 'פלטפורמת מאצ\'ינג חכמה ליזמים מבוססת AI וקוד ב-GitHub',
-    partnerName: 'אלון מזרחי',
-    partnerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-    myAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-    handshakeDate: '04 ספטמבר 2026',
-    isConfirmed: true,
-  },
-  {
-    id: 'p2',
-    ideaTitle: 'CyberShield AI',
-    tagline: 'מערכת אוטונומית לזיהוי איומים בסביבות Multi-Cloud',
-    partnerName: 'שירה כהן',
-    partnerAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80',
-    myAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-    handshakeDate: '28 אוגוסט 2026',
-    isConfirmed: true,
-  },
-];
-
 export const PartnershipsScreen: React.FC<PartnershipsScreenProps> = ({
   partnerships: initialPartnerships,
   onSelectPartnership,
@@ -64,39 +42,22 @@ export const PartnershipsScreen: React.FC<PartnershipsScreenProps> = ({
   onProfilePress,
 }) => {
   const [partnershipsData, setPartnershipsData] = useState<PartnershipItem[]>(
-    initialPartnerships ?? SAMPLE_PARTNERSHIPS,
+    initialPartnerships ?? [],
   );
 
   useEffect(() => {
     if (!initialPartnerships) {
       let isMounted = true;
       apiClient
-        .get<Record<string, unknown>>('/workspaces')
+        .get<{ partnerships: PartnershipItem[] }>('/users/me/partnerships')
         .then((res) => {
           if (!isMounted) return;
-          const raw = res?.['data'] ?? res;
-          if (Array.isArray(raw) && raw.length > 0) {
-            setPartnershipsData(
-              raw.map((item: unknown) => {
-                const w = item as Record<string, unknown>;
-                return {
-                  id: String(w['id'] ?? 'p'),
-                  ideaTitle: String(w['idea_title'] ?? w['title'] ?? 'Co-Founder Partnership'),
-                  tagline: String(w['tagline'] ?? w['description'] ?? 'מיזם משותף פעיל'),
-                  partnerName: String(w['partner_name'] ?? 'אלון מזרחי'),
-                  partnerAvatar: String(w['partner_avatar'] ?? SAMPLE_PARTNERSHIPS[0].partnerAvatar),
-                  myAvatar: String(w['my_avatar'] ?? SAMPLE_PARTNERSHIPS[0].myAvatar),
-                  handshakeDate: typeof w['created_at'] === 'string'
-                    ? new Date(w['created_at']).toLocaleDateString('he-IL')
-                    : '2026',
-                  isConfirmed: true,
-                };
-              }),
-            );
+          if (res?.partnerships && Array.isArray(res.partnerships)) {
+            setPartnershipsData(res.partnerships);
           }
         })
         .catch(() => {
-          // Keep sample partnerships fallback on network error
+          if (isMounted) setPartnershipsData([]);
         });
 
       return () => {
@@ -149,8 +110,8 @@ export const PartnershipsScreen: React.FC<PartnershipsScreenProps> = ({
                 <View style={styles.footerRow}>
                   {/* Co-founders avatar stack */}
                   <View style={styles.avatarStack}>
-                    <Image source={{ uri: item.myAvatar }} style={[styles.avatar, styles.myAvatarOverlay]} />
-                    <Image source={{ uri: item.partnerAvatar }} style={styles.avatar} />
+                    <UserAvatar name="אני" avatarUrl={item.myAvatar} size={32} />
+                    <UserAvatar name={item.partnerName} avatarUrl={item.partnerAvatar} size={32} />
                     <Text style={styles.partnerNameText}>עם {item.partnerName}</Text>
                   </View>
 

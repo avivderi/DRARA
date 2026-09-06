@@ -11,6 +11,7 @@ import {
 
 import { BottomTabBar, type TabType } from '../../components/layout/footers/BottomTabBar';
 import { BrandHeader } from '../../components/layout/headers/BrandHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface MatchCandidate {
@@ -39,8 +40,7 @@ export const MatchesFeedScreen: React.FC<MatchesFeedScreenProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/ideas/${ideaId}/matches`)
-      .then((res) => res.json())
+    apiGet<{ matches?: Array<{ candidate: { id: string; name: string; skills: string[] }; similarityScore: number; aiRationale: string }> }>(`/ideas/${ideaId}/matches`)
       .then((data: { matches?: Array<{ candidate: { id: string; name: string; skills: string[] }; similarityScore: number; aiRationale: string }> }) => {
         if (data.matches && data.matches.length > 0) {
           const formatted = data.matches.map((m) => ({

@@ -13,6 +13,7 @@ import {
 import { SingleCtaFooter } from '../../components/layout/footers/SingleCtaFooter';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
 import { colors, fonts } from '../../theme/tokens';
+import { DraraLogo } from '../../components/common/DraraLogo';
 
 interface LoginScreenProps {
   onBackPress: () => void;
@@ -40,8 +41,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <DraraLogo fontSize={36} />
+          </View>
           <Text style={styles.subtitle}>
-            הכנס/י את פרטי החשבון שלך כדי להתחבר ל-DRARA
+            הכנס/י את פרטי החשבון שלך כדי להתחבר ל-drara
           </Text>
 
           <View style={styles.formStack}>

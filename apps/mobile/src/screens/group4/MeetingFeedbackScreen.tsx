@@ -23,7 +23,7 @@ interface MeetingFeedbackScreenProps {
 }
 
 export const MeetingFeedbackScreen: React.FC<MeetingFeedbackScreenProps> = ({
-  partnerName = 'אלון מזרחי',
+  partnerName = 'שותף',
   onBackPress,
   onSubmitFeedback,
   onProceedToNFC,

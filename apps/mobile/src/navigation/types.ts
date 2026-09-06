@@ -74,4 +74,5 @@ export type RootStackParamList = {
   Handshake: NavigatorScreenParams<HandshakeStackParamList>;
   Group5Flow: NavigatorScreenParams<Group5StackParamList>;
   WorkspaceFlow: NavigatorScreenParams<WorkspaceStackParamList>;
+  DebugMenu: undefined;
 };

@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 
 import { colors, fonts } from '../../../theme/tokens';
 
+import { DraraLogo } from '../../common/DraraLogo';
+
 interface BrandHeaderProps {
   onNotificationPress?: () => void;
   onProfilePress?: () => void;
@@ -18,10 +20,7 @@ export const BrandHeader: React.FC<BrandHeaderProps> = ({
   return (
     <View style={styles.headerContainer}>
       {/* Right side in RTL: Brand Logo */}
-      <View style={styles.brandContainer}>
-        <Text style={styles.brandText}>DRARA</Text>
-        <View style={styles.accentDot} />
-      </View>
+      <DraraLogo fontSize={24} />
 
       {/* Left side in RTL: Actions */}
       <View style={styles.actionsContainer}>

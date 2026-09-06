@@ -33,21 +33,21 @@ interface DeepDiveReportScreenProps {
   onInitiateHandshake: () => void;
 }
 
-const DEFAULT_REPORT: DeepDiveReportData = {
-  candidateName: 'אלון מזרחי',
-  ideaTitle: 'DRARA Co-Founder Platform',
-  overallScore: 88,
-  technicalOverlap: 'חפיפת Stack מעולה ב-TypeScript ו-Python, עם יתרון משמעותי לאלון בתשתיות ענן (AWS/K8s) המכסה 100% מהחסר ברעיון.',
-  businessComplement: 'אלון מחפש הובלת מוצר ושיווק, בעוד אתה מביא ניסיון ב-Product Strategy ו-B2B Sales. השלמה מלאה של 100%.',
+const FALLBACK_REPORT: DeepDiveReportData = {
+  candidateName: 'מועמד',
+  ideaTitle: 'מיזם',
+  overallScore: 85,
+  technicalOverlap: 'חפיפת Stack טכנולוגי וכישורים משלימים בתשתיות ובפיתוח.',
+  businessComplement: 'השלמה של כישורי מוצר, ניהול ושיווק.',
   riskFactors: [
-    'שני השותפים פועלים כרגע במשרה חלקית לצד עבודה נוספת — יש לתאם ציפיות לגבי שעות שבועיות.',
-    'נדרש סנכרון לגבי חלוקת האקוויטי והאחריות המשפטית לפני חתימה.',
+    'יש לתאם ציפיות לגבי זמינות ושעות שבועיות.',
+    'נדרש סנכרון לגבי חלוקת האקוויטי והאחריות המשפטית.',
   ],
   swotAnalysis: {
-    strengths: ['כיסוי טכנולוגי ועסקי מלא', 'ניסיון קודם מוכח בהקמת מערכות ב-Scale גבוה'],
-    weaknesses: ['אין ניסיון עבודה משותף קודם בין המייסדים'],
-    opportunities: ['כניסה מהירה לשוק עם MVP יציב תוך 6 שבועות'],
-    threats: ['מגבלת זמן של משרה חלקית בשלב הראשוני'],
+    strengths: ['כיסוי טכנולוגי ועסקי משלים', 'ניסיון מקצועי רלוונטי'],
+    weaknesses: ['אין ניסיון עבודה משותף קודם'],
+    opportunities: ['פיתוח MVP והאצת כניסה לשוק'],
+    threats: ['סנכרון זמינות בזמן אמת'],
   },
   recommendedNextSteps: [
     'קיום מפגש פיזי ראשון וביצוע NFC Handshake לאימות זהות.',
@@ -56,7 +56,7 @@ const DEFAULT_REPORT: DeepDiveReportData = {
 };
 
 export const DeepDiveReportScreen: React.FC<DeepDiveReportScreenProps> = ({
-  report = DEFAULT_REPORT,
+  report = FALLBACK_REPORT,
   onBackPress,
   onInitiateHandshake,
 }) => {

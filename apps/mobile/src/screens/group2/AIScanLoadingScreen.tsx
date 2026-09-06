@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, SafeAreaView } from 'react-native';
 
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 interface AIScanLoadingScreenProps {
   ideaId: string;
   onScanComplete: (result: { readiness_score: number; ai_summary: string }) => void;
-  onScanFailed: (error: string) => void;
+  onScanFailed: () => void;
 }
 
 export const AIScanLoadingScreen: React.FC<AIScanLoadingScreenProps> = ({
@@ -27,19 +28,13 @@ export const AIScanLoadingScreen: React.FC<AIScanLoadingScreenProps> = ({
       }
 
       try {
-        const response = await fetch(`http://localhost:3001/ideas/${ideaId}`);
-        if (response.ok) {
-          const idea = (await response.json()) as {
-            ai_summary?: string;
-            readiness_score?: number;
-          };
-          if (idea.readiness_score !== undefined && idea.ai_summary) {
-            clearInterval(interval);
-            onScanComplete({
-              readiness_score: idea.readiness_score,
-              ai_summary: idea.ai_summary,
-            });
-          }
+        const idea = await apiGet<{ ai_summary?: string; readiness_score?: number }>(`/ideas/${ideaId}`);
+        if (idea.readiness_score !== undefined && idea.ai_summary) {
+          clearInterval(interval);
+          onScanComplete({
+            readiness_score: idea.readiness_score,
+            ai_summary: idea.ai_summary,
+          });
         }
       } catch {
         // Continue polling
