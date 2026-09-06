@@ -133,4 +133,34 @@ export const ideasController = {
     );
     res.json(updated);
   },
+
+  getPublicFeed: async (req: Request, res: Response): Promise<void> => {
+    const limit = Math.min(Number(req.query['limit'] || 20), 100);
+    const offset = Math.max(Number(req.query['offset'] || 0), 0);
+
+    const service = makeIdeasService();
+    const ideas = await service.getPublicIdeas(limit, offset);
+    res.json({ ideas });
+  },
+
+  searchPublic: async (req: Request, res: Response): Promise<void> => {
+    const q = req.query['q'] as string | undefined;
+    const tagsStr = req.query['tags'] as string | undefined;
+    const tags = tagsStr ? tagsStr.split(',').map((t) => t.trim()).filter(Boolean) : undefined;
+    const limit = Math.min(Number(req.query['limit'] || 20), 100);
+    const offset = Math.max(Number(req.query['offset'] || 0), 0);
+
+    const service = makeIdeasService();
+    const ideas = await service.searchPublicIdeas(q, tags, limit, offset);
+    res.json({ ideas });
+  },
+
+  getPublicById: async (req: Request, res: Response): Promise<void> => {
+    const id = req.params['id'] as string;
+    const userId = req.userId;
+
+    const service = makeIdeasService();
+    const idea = await service.getPublicIdeaById(id, userId);
+    res.json(idea);
+  },
 };

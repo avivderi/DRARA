@@ -8,4 +8,5 @@ export const usersRouter = Router();
 usersRouter.use(requireAuth);
 
 usersRouter.get('/me', usersController.getMe);
+usersRouter.get('/me/full-profile', usersController.getFullProfile);
 usersRouter.patch('/me', usersController.updateMe);

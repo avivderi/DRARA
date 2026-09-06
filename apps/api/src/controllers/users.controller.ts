@@ -8,12 +8,14 @@ import { EmbeddingServiceClient } from '../services/embedding-service.client';
 
 const UpdateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
+  headline: z.string().max(200).nullable().optional(),
   avatar_url: z.string().url().nullable().optional(),
   skills: z.array(z.string().min(1).max(50)).max(20).optional(),
   offering_tags: z.array(z.string().min(1).max(50)).max(20).optional(),
   seeking_tags: z.array(z.string().min(1).max(50)).max(20).optional(),
   experience_level: z.enum(['junior', 'mid', 'senior']).nullable().optional(),
   commitment_level: z.enum(['full-time', 'part-time', 'weekends']).nullable().optional(),
+  availability_hours_per_week: z.number().min(0).max(168).nullable().optional(),
   bio: z.string().max(500).nullable().optional(),
 });
 
@@ -26,9 +28,57 @@ export const usersController = {
     const user = await userRepo.findById(userId);
     if (!user) throw AppError.notFound('User not found');
 
-    // Strip sensitive fields before sending
-    const { device_public_key: _, provider_id: __, ...safeUser } = user;
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      provider: user.provider,
+      skills: user.skills,
+      experience_level: user.experience_level,
+      commitment_level: user.commitment_level,
+      bio: user.bio,
+      github_username: user.github_username,
+      offering_tags: user.offering_tags,
+      seeking_tags: user.seeking_tags,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
     res.json(safeUser);
+  },
+
+  getFullProfile: async (req: Request, res: Response): Promise<void> => {
+    const userId = req.userId;
+    if (!userId) throw AppError.unauthorized();
+
+    const userRepo = new KnexUserRepository(db);
+    const user = await userRepo.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      provider: user.provider,
+      skills: user.skills,
+      experience_level: user.experience_level,
+      commitment_level: user.commitment_level,
+      bio: user.bio,
+      github_username: user.github_username,
+      offering_tags: user.offering_tags,
+      seeking_tags: user.seeking_tags,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
+    res.json({
+      user: safeUser,
+      offering_tags: user.offering_tags ?? [],
+      seeking_tags: user.seeking_tags ?? [],
+      bio: user.bio ?? null,
+      headline: (user as Record<string, unknown>)['headline'] ?? null,
+      availability_hours_per_week: (user as Record<string, unknown>)['availability_hours_per_week'] ?? null,
+    });
   },
 
   updateMe: async (req: Request, res: Response): Promise<void> => {
@@ -48,8 +98,8 @@ export const usersController = {
     if (parsed.data.offering_tags !== undefined || parsed.data.seeking_tags !== undefined || parsed.data.bio !== undefined) {
       try {
         const embeddingClient = new EmbeddingServiceClient();
-        const offeringTags = updated.offering_tags ?? [];
-        const seekingTags = updated.seeking_tags ?? [];
+        const offeringTags: string[] = updated.offering_tags ?? [];
+        const seekingTags: string[] = updated.seeking_tags ?? [];
         const bio = updated.bio ?? '';
 
         let offeringVector: number[] | undefined;

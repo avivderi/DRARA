@@ -6,6 +6,12 @@ import { requireAuth } from '../middleware/auth.middleware';
 
 export const ideasRouter = Router();
 
+// Public routes (accessible publicly or authenticated)
+ideasRouter.get('/public', ideasController.getPublicFeed);
+ideasRouter.get('/public/search', ideasController.searchPublic);
+ideasRouter.get('/public/:id', ideasController.getPublicById);
+
+// Protected routes below
 ideasRouter.use(requireAuth);
 
 ideasRouter.post('/', ideasController.create);

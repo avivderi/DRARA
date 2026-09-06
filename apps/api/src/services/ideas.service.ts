@@ -180,4 +180,31 @@ export class IdeasService {
     const updated = await this.ideaRepo.updateVisibility(ideaId, visibility);
     return updated!;
   }
+
+  async getPublicIdeas(limit: number = 20, offset: number = 0): Promise<Idea[]> {
+    return this.ideaRepo.findPublicIdeas(limit, offset);
+  }
+
+  async searchPublicIdeas(
+    query?: string,
+    tags?: string[],
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<Idea[]> {
+    return this.ideaRepo.searchPublicIdeas(query, tags, limit, offset);
+  }
+
+  async getPublicIdeaById(ideaId: string, requestingUserId?: string): Promise<Idea> {
+    const idea = await this.ideaRepo.findById(ideaId);
+    if (!idea) {
+      throw AppError.notFound('Idea not found');
+    }
+
+    // Access control check: If not public and requester is not the owner, return 403 Forbidden
+    if (idea.visibility !== 'public' && idea.user_id !== requestingUserId) {
+      throw AppError.forbidden('Access denied to private idea');
+    }
+
+    return idea;
+  }
 }

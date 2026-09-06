@@ -100,4 +100,41 @@ export class KnexIdeaRepository implements IIdeaRepository {
       .returning('*');
     return updated ?? null;
   }
+
+  async findPublicIdeas(limit: number = 20, offset: number = 0): Promise<Idea[]> {
+    return this.db<Idea>('ideas')
+      .where({ visibility: 'public' })
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async searchPublicIdeas(
+    query?: string,
+    tags?: string[],
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<Idea[]> {
+    let qb = this.db<Idea>('ideas').where({ visibility: 'public' });
+
+    if (query && query.trim()) {
+      const searchTerm = `%${query.trim()}%`;
+      qb = qb.where(function () {
+        void this.whereILike('title', searchTerm)
+          .orWhereILike('description', searchTerm)
+          .orWhereILike('ai_summary', searchTerm);
+      });
+    }
+
+    if (tags && tags.length > 0) {
+      qb = qb.where(function () {
+        void this.whereRaw('stack_detected && ?::text[]', [tags]).orWhereRaw(
+          'seeking_tags && ?::text[]',
+          [tags]
+        );
+      });
+    }
+
+    return qb.orderBy('created_at', 'desc').limit(limit).offset(offset);
+  }
 }

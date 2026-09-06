@@ -106,6 +106,42 @@ export class FakeIdeaRepository implements IIdeaRepository {
     return structuredClone(updated);
   }
 
+  async findPublicIdeas(limit: number = 20, offset: number = 0): Promise<Idea[]> {
+    return [...this.store.values()]
+      .filter((item) => item.visibility === 'public')
+      .slice(offset, offset + limit)
+      .map((item) => structuredClone(item));
+  }
+
+  async searchPublicIdeas(
+    query?: string,
+    tags?: string[],
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<Idea[]> {
+    let items = [...this.store.values()].filter((item) => item.visibility === 'public');
+
+    if (query && query.trim()) {
+      const q = query.trim().toLowerCase();
+      items = items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          (i.description && i.description.toLowerCase().includes(q)) ||
+          (i.ai_summary && i.ai_summary.toLowerCase().includes(q))
+      );
+    }
+
+    if (tags && tags.length > 0) {
+      items = items.filter(
+        (i) =>
+          (i.stack_detected && i.stack_detected.some((t) => tags.includes(t))) ||
+          (i.seeking_tags && i.seeking_tags.some((t) => tags.includes(t)))
+      );
+    }
+
+    return items.slice(offset, offset + limit).map((item) => structuredClone(item));
+  }
+
   clear(): void {
     this.store.clear();
   }

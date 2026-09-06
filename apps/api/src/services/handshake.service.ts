@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import type { IHandshakeEventRepository, HandshakeEvent } from '../repositories/handshake-event.repository.interface';
 import type { IMatchRepository, Match } from '../repositories/match.repository.interface';
+import type { INotificationRepository } from '../repositories/notification.repository.interface';
 import type { IUserRepository } from '../repositories/user.repository.interface';
 
 const HANDSHAKE_SECRET = process.env['JWT_SECRET'] || 'drara-nfc-handshake-secret-key';
@@ -45,6 +46,7 @@ export class HandshakeService {
     private readonly matchRepository: IMatchRepository,
     private readonly handshakeEventRepository: IHandshakeEventRepository,
     private readonly userRepository: IUserRepository,
+    private readonly notificationRepository?: INotificationRepository,
   ) {}
 
   /**
@@ -191,6 +193,17 @@ export class HandshakeService {
     const updatedMatch = await this.matchRepository.updateStatus(matchId, 'confirmed');
     if (!updatedMatch) {
       throw new Error('Failed to update match status to confirmed');
+    }
+
+    if (this.notificationRepository) {
+      await this.notificationRepository.create(payload.initiatorUserId, 'handshake_confirmed', {
+        match_id: matchId,
+        partner_id: signerUserId,
+      });
+      await this.notificationRepository.create(signerUserId, 'handshake_confirmed', {
+        match_id: matchId,
+        partner_id: payload.initiatorUserId,
+      });
     }
 
     return {

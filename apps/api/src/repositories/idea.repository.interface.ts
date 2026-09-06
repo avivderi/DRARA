@@ -47,4 +47,6 @@ export interface IIdeaRepository {
   updateManualDescription(id: string, description: string): Promise<Idea | null>;
   updateVisibility(id: string, visibility: IdeaVisibility): Promise<Idea | null>;
   updateSeekingEmbedding(id: string, seekingTags: string[], seekingEmbedding: number[]): Promise<Idea | null>;
+  findPublicIdeas(limit: number, offset: number): Promise<Idea[]>;
+  searchPublicIdeas(query?: string, tags?: string[], limit?: number, offset?: number): Promise<Idea[]>;
 }
