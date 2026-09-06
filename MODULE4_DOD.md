@@ -40,10 +40,7 @@ Module 4 מיישם שכבת ה-NFC Handshake הפיזי: זוג מייסדים 
 - [x] `NFCHandshakeScreen.tsx` — מסך ה-NFC tap עם אנימציה ו-state management
 - [x] `NFCSuccessScreen.tsx` — מסך הצלחה אחרי אימות
 
-### 🤖 Voyage AI Integration (Module 4 Extension)
-- [x] `input_type` parameter הוסף ל-embedding API: `"query"` לחיפוש, `"document"` לאינדוקס
-- [x] אמות מידה: embeddings עם `input_type` שונה מחזירים vectors שונים באופן מדיד
-
 ---
 
 *Module 4 נסגר ✅ — commit `acff9af` on main branch*
+
