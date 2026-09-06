@@ -33,17 +33,22 @@ Module 3 מיישם מנוע מאצ'ינג סמנטי המשתמש ב-pgvector �
 - [x] מאצ'ים 6+ מקבלים rationale גנרי לחיסכון בקריאות API
 - [x] Rationale caching ב-`rationaleCache` Map למניעת קריאות כפולות לאותו זוג idea/user
 
-### 🧪 Testing & Real Benchmark Results
+### 🧪 Testing & Benchmark Status
 - [x] `HandshakeService` unit tests עוברים עם fake repositories
-- [x] Integration test: `matching.integration.test.ts` מריץ pgvector cosine distance אמיתי ב-PostgreSQL מול AI service
-- [x] **תוצאת בדיקה אמיתית (Empirical Benchmark)**:
+- [x] Integration test: `matching.integration.test.ts` מריץ pgvector cosine distance ב-PostgreSQL מול AI service
+- [x] **אימות Visibility Scoping ושלמות ה-Pipeline**:
   - Idea seeking_tags: `['Backend', 'DevOps']`
   - **User A** (offering_tags: `['Backend', 'DevOps', 'AWS']`): **Similarity Score = 0.7062**
   - **User B** (offering_tags: `['Marketing', 'Sales', 'Content']`): **Similarity Score = 0.3973**
-  - ✅ **User A מדורג באופן חיובי וגבוה משמעותית מ-User B (0.7062 vs 0.3973)** דרך ה-DB וה-endpoint `/ideas/:id/matches`.
+  - ✅ **User A מדורג גבוה מ-User B**, אכיפת Visibility Scoping נבדקה ועוברת בהצלחה.
+- [!] **סטטוס Voyage AI Production Embeddings**:
+  - מפתח `VOYAGE_API_KEY` מוגדר ב-`apps/ai-service/.env`.
+  - עקב המגבלה ב-Voyage AI Free Tier (ללא כרטיס אשראי: **3 RPM / 3 קריאות בדקה**), הרצת טסט רציפה מחזירה שגיאת `HTTP 429 Too Many Requests` והשירות נופל ל-Fallback (`⚠️ USING FALLBACK EMBEDDING`).
+  - **נדרש לעדכן כרטיס אשראי ב-Voyage AI Dashboard** כדי לפתוח Standard Rate Limit (שיעלה מ-3 RPM) עבור הרצת סייקלים רציפים בייצור.
 
 ### 📦 Voyage AI Integration
-- [x] Fallback embedding (SHA-256 deterministic) כאשר `VOYAGE_API_KEY` לא מוגדר מביא לדירוג סמנטי יציב ומדויק
+- [x] שירות ה-AI מטפל אוטומטית בקריאות ל-Voyage AI API, וכולל מנגנון Fallback דטרמיניסטי (SHA-256) במקרה של Rate Limit או חוסר מפתח.
+
 
 
 ---
