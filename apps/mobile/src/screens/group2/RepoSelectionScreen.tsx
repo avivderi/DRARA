@@ -43,12 +43,10 @@ export const RepoSelectionScreen: React.FC<RepoSelectionScreenProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [repoList, setRepoList] = useState<GitHubRepoItem[]>(propRepos || []);
   const [selectedRepo, setSelectedRepo] = useState(selectedRepoFullName);
-  const [loading, setLoading] = useState(!propRepos);
   const [error, setError] = useState('');
 
   React.useEffect(() => {
     if (!propRepos || propRepos.length === 0) {
-      setLoading(true);
       apiGet<{ repos: any[] }>('/github/repos')
         .then((res) => {
           if (Array.isArray(res.repos)) {
@@ -66,15 +64,6 @@ export const RepoSelectionScreen: React.FC<RepoSelectionScreenProps> = ({
           }
         })
         .catch(() => {
-          // Fallback if GitHub integration not connected yet
-          setRepoList([
-            {
-              fullName: 'drara/mobile-app',
-              description: 'DRARA React Native Mobile Application',
-              language: 'TypeScript',
-              isPrivate: true,
-              updatedAt: 'עודכן היום',
-            },
           ]);
         })
         .finally(() => setLoading(false));
