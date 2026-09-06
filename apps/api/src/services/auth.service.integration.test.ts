@@ -43,6 +43,7 @@ describe('AuthService Integration Test (Real DB + Real JwtService + Real SHA-256
     // Clean up after suite
     await db('refresh_tokens').del();
     await db('users').where({ email: testProfile.email }).del();
+    await db.destroy();
   });
 
   it('end-to-end OAuth login -> SHA-256 hashed DB save -> raw token refresh -> DB lookup & rotation', async () => {

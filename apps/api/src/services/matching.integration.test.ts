@@ -89,6 +89,7 @@ describe('Module 3 Integration Verification: Real pgvector Matching & Visibility
     if (ownerId) await db('users').where({ id: ownerId }).del();
     if (userA_TechnicalId) await db('users').where({ id: userA_TechnicalId }).del();
     if (userB_MarketingId) await db('users').where({ id: userB_MarketingId }).del();
+    await db.destroy();
   });
 
   it('DoD Requirement 3: Real pgvector Cosine Distance — User A (Technical) ranks significantly higher than User B (Marketing) for Backend/DevOps idea', async () => {

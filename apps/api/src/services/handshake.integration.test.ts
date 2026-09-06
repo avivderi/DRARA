@@ -84,6 +84,7 @@ describe('Module 4 Integration Verification: Physical NFC Handshake Layer', () =
     if (ideaId) await db('ideas').where({ id: ideaId }).del();
     if (ownerId) await db('users').where({ id: ownerId }).del();
     if (candidateId) await db('users').where({ id: candidateId }).del();
+    await db.destroy();
   });
 
   it('verifies end-to-end physical NFC handshake challenge, persistence in Postgres, and match status update to confirmed', async () => {
