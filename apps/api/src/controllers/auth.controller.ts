@@ -57,4 +57,32 @@ export const authController = {
 
     res.status(204).send();
   },
+
+  demoLogin: async (req: Request, res: Response): Promise<void> => {
+    if (process.env['NODE_ENV'] === 'production') {
+      res.status(404).json({ error: 'Not found' });
+      return;
+    }
+
+    const { email, name, provider = 'google' } = req.body as { email?: string; name?: string; provider?: 'google' | 'github' };
+    const userEmail = email || `founder_${Date.now()}@drara.io`;
+    const userName = name || 'אלון מזרחי';
+    const authService = makeAuthService();
+    const { tokens, user } = await authService.loginWithOAuth({
+      provider,
+      providerId: `demo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      name: userName,
+      email: userEmail,
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    });
+
+    res.json({
+      user,
+      access_token: tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+      expires_at: tokens.refreshTokenExpiresAt,
+    });
+  },
+
 };
+

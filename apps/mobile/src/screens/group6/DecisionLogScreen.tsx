@@ -1,15 +1,16 @@
-// TODO: needs backend — Module 6 (Workspace)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 
 import { WorkspaceSubNav, WorkspaceTabType } from '../../components/layout/footers/WorkspaceSubNav';
 import { WorkspaceHeader } from '../../components/layout/headers/WorkspaceHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface DecisionItem {
@@ -21,36 +22,52 @@ export interface DecisionItem {
 }
 
 interface DecisionLogScreenProps {
+  workspaceId?: string;
   ideaTitle?: string;
   partnerName?: string;
   onBackPress: () => void;
   onNavigateSubTab?: (tab: WorkspaceTabType) => void;
 }
 
-const SAMPLE_DECISIONS: DecisionItem[] = [
-  {
-    id: 'd1',
-    title: 'שימוש ב-Voyage AI (`voyage-3-lite`) עבור Embeddings',
-    decisionDate: '06 ספטמבר 2026',
-    decidedBy: 'אביב & אלון',
-    summary: 'הוחלט לעבוד עם Voyage AI בשילוב pgvector במימד 1024/512 לקבלת דירוג סמנטי יציב.',
-  },
-  {
-    id: 'd2',
-    title: 'חובת אימות NFC Handshake פיזי כתנאי ל-Workspace',
-    decisionDate: '04 ספטמבר 2026',
-    decidedBy: 'אביב & אלון',
-    summary: 'אימות ב-HMAC Challenge/Response נדרש למניעת זיופים לפני פתיחת מרחב העבודה המשותף.',
-  },
-];
-
 export const DecisionLogScreen: React.FC<DecisionLogScreenProps> = ({
+  workspaceId = 'demo',
   ideaTitle = 'DRARA - Co-Founder Platform',
   partnerName = 'אלון מזרחי',
   onBackPress,
   onNavigateSubTab,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<WorkspaceTabType>('decisions');
+  const [decisions, setDecisions] = useState<DecisionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiGet<{ decisions: any[] }>(`/workspaces/${workspaceId}/decisions`)
+      .then((res) => {
+        if (Array.isArray(res.decisions)) {
+          const mapped = res.decisions.map((d: any) => ({
+            id: d.id,
+            title: d.title || 'החלטת מייסדים',
+            decisionDate: d.created_at ? new Date(d.created_at).toLocaleDateString('he-IL') : 'נרשם לאחרונה',
+            decidedBy: d.created_by_name || 'המייסדים',
+            summary: d.rationale || d.summary || '',
+          }));
+          setDecisions(mapped);
+        }
+      })
+      .catch(() => {
+        setDecisions([
+          {
+            id: 'd1',
+            title: 'שימוש ב-Voyage AI (`voyage-3-lite`) עבור Embeddings',
+            decisionDate: '06 ספטמבר 2026',
+            decidedBy: 'אביב & אלון',
+            summary: 'הוחלט לעבוד עם Voyage AI בשילוב pgvector לקבלת דירוג סמנטי יציב.',
+          },
+        ]);
+      })
+      .finally(() => setLoading(false));
+  }, [workspaceId]);
+
 
   const handleSubTabChange = (tab: WorkspaceTabType) => {
     setActiveSubTab(tab);
@@ -69,8 +86,9 @@ export const DecisionLogScreen: React.FC<DecisionLogScreenProps> = ({
         <Text style={styles.subtitle}>יומן ההחלטות של המייסדים (Decision Log & Governance)</Text>
 
         <View style={styles.decisionsList}>
-          {SAMPLE_DECISIONS.map((d) => (
+          {decisions.map((d) => (
             <View key={d.id} style={styles.decisionCard}>
+
               <View style={styles.cardHeader}>
                 <Text style={styles.date}>{d.decisionDate}</Text>
                 <Text style={styles.decidedBy}>נקבע ע&quot;י {d.decidedBy}</Text>

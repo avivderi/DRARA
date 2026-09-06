@@ -2,8 +2,16 @@
   "expo": {
     "name": "DRARA",
     "slug": "drara-mobile",
+    "scheme": "drara",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark"
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.drara.mobile",
+      "permissions": ["NFC"]
+    },
+    "plugins": ["react-native-nfc-manager"]
   }
 }
+
+

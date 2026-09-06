@@ -76,8 +76,10 @@ authRouter.get(
 );
 
 // ── Token management ─────────────────────────────────────
+authRouter.post('/demo', authController.demoLogin);
 authRouter.post('/refresh', authController.refresh);
 authRouter.post('/logout', authController.logout);
+
 
 authRouter.get('/failure', (_req, res) => {
   res.status(401).json({ error: 'OAuth authentication failed' });

@@ -1,4 +1,3 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 
 import { SingleCtaFooter } from '../../components/layout/footers/SingleCtaFooter';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiPatch } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 interface EditProfileScreenProps {
@@ -18,13 +18,13 @@ interface EditProfileScreenProps {
   initialHeadline?: string;
   initialBio?: string;
   onBackPress: () => void;
-  onSaveProfile: (name: string, headline: string, bio: string) => Promise<void> | void;
+  onSaveProfile?: (name: string, headline: string, bio: string) => Promise<void> | void;
 }
 
 export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   initialName = 'אביב דרי',
   initialHeadline = 'Fullstack Architect & AI Agent Builder',
-  initialBio = 'מפתח מערכות ענן ואינטליגנציה מלאכותית. הקמתי מוצרים מבוססי AI, pgvector ו-Microservices.',
+  initialBio = 'מפתח מערכות ענן ואינטליגנציה מלאכותית.',
   onBackPress,
   onSaveProfile,
 }) => {
@@ -35,13 +35,19 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   const [error, setError] = useState('');
 
   const handleSave = () => {
-    if (!name.trim() || !headline.trim()) {
-      setError('אנא הזן שם וכותרת מקצועית');
+    if (!name.trim()) {
+      setError('אנא הזן שם');
       return;
     }
     setError('');
     setLoading(true);
-    Promise.resolve(onSaveProfile(name.trim(), headline.trim(), bio.trim()))
+    const savePromise = onSaveProfile
+      ? Promise.resolve(onSaveProfile(name.trim(), headline.trim(), bio.trim()))
+      : apiPatch('/users/me', { name: name.trim(), headline: headline.trim(), bio: bio.trim() }).then(() => {
+          onBackPress();
+        });
+
+    savePromise
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : 'אירעה שגיאה בשמירת הפרופיל';
         setError(msg);
@@ -50,6 +56,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         setLoading(false);
       });
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

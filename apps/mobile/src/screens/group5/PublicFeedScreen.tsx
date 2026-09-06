@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,10 +7,12 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface PublicIdeaItem {
@@ -33,43 +34,49 @@ interface PublicFeedScreenProps {
   onOpenSearch: () => void;
 }
 
-const SAMPLE_PUBLIC_IDEAS: PublicIdeaItem[] = [
-  {
-    id: 'pub-1',
-    title: 'Distributed Cloud Microservices Platform',
-    ownerName: 'רועי כהן',
-    ownerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-    repoFullName: 'roicohen/cloud-mesh',
-    readinessScore: 9,
-    tags: ['Backend', 'DevOps', 'AWS', 'Go'],
-    summary: 'פלטפורמת ענן לניהול תזמור מיקרו-שירותים. מחפש שותף מוביל בשיווק B2B.',
-  },
-  {
-    id: 'pub-2',
-    title: 'FinTech Algorithmic Trading Bot',
-    ownerName: 'דנה לוי',
-    ownerAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
-    readinessScore: 8,
-    tags: ['Python', 'AI / ML', 'Finance'],
-    summary: 'אלגוריתם מסחר אוטומטי במתכונת SaaS. מחפשת מפתח/ת Backend מנוסה.',
-  },
-];
-
 export const PublicFeedScreen: React.FC<PublicFeedScreenProps> = ({
-  ideas = SAMPLE_PUBLIC_IDEAS,
+  ideas: propIdeas,
   activeTab = 'home',
   onTabPress,
   onSelectIdea,
   onOpenSearch,
 }) => {
   const [searchFilter, setSearchFilter] = useState('');
+  const [ideaList, setIdeaList] = useState<PublicIdeaItem[]>(propIdeas || []);
+  const [loading, setLoading] = useState(!propIdeas);
 
-  const filteredIdeas = ideas.filter(
+  useEffect(() => {
+    if (!propIdeas) {
+      setLoading(true);
+      apiGet<{ ideas: any[] }>('/ideas/public')
+        .then((res) => {
+          if (Array.isArray(res.ideas)) {
+            const mapped = res.ideas.map((item: any) => ({
+              id: item.id,
+              title: item.title || 'מיזם ללא שם',
+              ownerName: item.owner_name || item.ownerName || 'מייתר לא ידוע',
+              ownerAvatar: item.owner_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+              repoFullName: item.github_repo_full_name || item.repoFullName,
+              readinessScore: item.readiness_score || item.readinessScore || 8,
+              tags: item.tags || item.offering_tags || ['SaaS', 'AI'],
+              summary: item.manual_description || item.description || item.summary || 'אין תיאור זמין',
+            }));
+            setIdeaList(mapped);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, []);
+
+
+  const filteredIdeas = ideaList.filter(
     (i) =>
       i.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
       i.summary.toLowerCase().includes(searchFilter.toLowerCase()) ||
       i.tags.some((t) => t.toLowerCase().includes(searchFilter.toLowerCase())),
   );
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

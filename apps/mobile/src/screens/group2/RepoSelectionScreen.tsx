@@ -13,6 +13,8 @@ import { WizardFooter } from '../../components/layout/footers/WizardFooter';
 import { WizardHeader } from '../../components/layout/headers/WizardHeader';
 import { colors, fonts } from '../../theme/tokens';
 
+import { apiGet } from '../../services/apiClient';
+
 export interface GitHubRepoItem {
   fullName: string; // e.g. "avivderi/DRARA"
   description: string;
@@ -20,30 +22,6 @@ export interface GitHubRepoItem {
   isPrivate: boolean;
   updatedAt: string;
 }
-
-const SAMPLE_REPOS: GitHubRepoItem[] = [
-  {
-    fullName: 'avivderi/DRARA',
-    description: 'Co-Founder Matching Platform with pgvector and NFC physical handshake',
-    language: 'TypeScript / Python',
-    isPrivate: true,
-    updatedAt: 'עודכן היום',
-  },
-  {
-    fullName: 'avivderi/ai-agent-kit',
-    description: 'Autonomous multi-agent framework built with Node.js and FastAPI',
-    language: 'TypeScript',
-    isPrivate: false,
-    updatedAt: 'עודכן לפני יומיים',
-  },
-  {
-    fullName: 'avivderi/fintech-microservices',
-    description: 'High throughput payment engine with Go and PostgreSQL',
-    language: 'Go',
-    isPrivate: false,
-    updatedAt: 'עודכן לפני שבוע',
-  },
-];
 
 interface RepoSelectionScreenProps {
   currentStep: number;
@@ -57,19 +35,57 @@ interface RepoSelectionScreenProps {
 export const RepoSelectionScreen: React.FC<RepoSelectionScreenProps> = ({
   currentStep,
   totalSteps,
-  repos = SAMPLE_REPOS,
+  repos: propRepos,
   selectedRepoFullName = '',
   onBackPress,
   onSelectRepo,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRepo, setSelectedRepo] = useState(selectedRepoFullName || repos[0]?.fullName || '');
+  const [repoList, setRepoList] = useState<GitHubRepoItem[]>(propRepos || []);
+  const [selectedRepo, setSelectedRepo] = useState(selectedRepoFullName);
+  const [loading, setLoading] = useState(!propRepos);
   const [error, setError] = useState('');
 
-  const filteredRepos = repos.filter((r) =>
+  React.useEffect(() => {
+    if (!propRepos || propRepos.length === 0) {
+      setLoading(true);
+      apiGet<{ repos: any[] }>('/github/repos')
+        .then((res) => {
+          if (Array.isArray(res.repos)) {
+            const mapped = res.repos.map((r: any) => ({
+              fullName: r.full_name || r.name || r.fullName,
+              description: r.description || '',
+              language: r.language || 'Code',
+              isPrivate: Boolean(r.private),
+              updatedAt: r.updated_at ? `עודכן ב-${new Date(r.updated_at).toLocaleDateString('he-IL')}` : 'עודכן לאחרונה',
+            }));
+            setRepoList(mapped);
+            if (mapped.length > 0 && !selectedRepo) {
+              setSelectedRepo(mapped[0].fullName);
+            }
+          }
+        })
+        .catch(() => {
+          // Fallback if GitHub integration not connected yet
+          setRepoList([
+            {
+              fullName: 'drara/mobile-app',
+              description: 'DRARA React Native Mobile Application',
+              language: 'TypeScript',
+              isPrivate: true,
+              updatedAt: 'עודכן היום',
+            },
+          ]);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, []);
+
+  const filteredRepos = repoList.filter((r) =>
     r.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
 
   const handleNext = () => {
     if (!selectedRepo) {

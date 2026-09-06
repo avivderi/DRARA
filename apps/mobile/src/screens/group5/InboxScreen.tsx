@@ -1,5 +1,4 @@
-// TODO: needs backend — Module 5 (Messaging/Public)
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,10 +7,12 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 
 import { BottomTabBar, TabType } from '../../components/layout/footers/BottomTabBar';
 import { SimpleTitleHeader } from '../../components/layout/headers/SimpleTitleHeader';
+import { apiGet } from '../../services/apiClient';
 import { colors, fonts } from '../../theme/tokens';
 
 export interface ChatThread {
@@ -31,41 +32,47 @@ interface InboxScreenProps {
   onSelectThread: (threadId: string) => void;
 }
 
-const SAMPLE_THREADS: ChatThread[] = [
-  {
-    id: 'thread-1',
-    partnerName: 'אלון מזרחי',
-    partnerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
-    lastMessage: 'מעולה! נתראה ב-WeWork Sarona בשעה 16:00 ל-NFC Handshake.',
-    timestamp: '10:42',
-    unreadCount: 2,
-    isConfirmedMatch: true,
-  },
-  {
-    id: 'thread-2',
-    partnerName: 'מיכל כהן',
-    partnerAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
-    lastMessage: 'היי, ראיתי את ה-Readiness Score של המיזם. אשמח לשמוע עוד על ה-Stack.',
-    timestamp: 'אתמול',
-    unreadCount: 0,
-    isConfirmedMatch: false,
-  },
-];
-
 export const InboxScreen: React.FC<InboxScreenProps> = ({
-  threads = SAMPLE_THREADS,
+  threads: propThreads,
   activeTab = 'inbox',
   onTabPress,
   onSelectThread,
 }) => {
+  const [threadList, setThreadList] = useState<ChatThread[]>(propThreads || []);
+  const [loading, setLoading] = useState(!propThreads);
+
+  useEffect(() => {
+    if (!propThreads) {
+      setLoading(true);
+      apiGet<{ conversations: any[] }>('/conversations')
+        .then((res) => {
+          if (Array.isArray(res.conversations)) {
+            const mapped = res.conversations.map((c: any) => ({
+              id: c.id || c.threadId,
+              partnerName: c.partner_name || c.partnerName || 'שותף',
+              partnerAvatar: c.partner_avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+              lastMessage: c.last_message || c.lastMessage || 'אין הודעות קודמות',
+              timestamp: c.updated_at ? new Date(c.updated_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : 'חדש',
+              unreadCount: c.unread_count || c.unreadCount || 0,
+              isConfirmedMatch: Boolean(c.nfc_confirmed || c.isConfirmedMatch),
+            }));
+            setThreadList(mapped);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <SimpleTitleHeader title="תיבת הודעות (Inbox)" />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.threadsList}>
-          {threads.map((thread) => (
+          {threadList.map((thread) => (
             <TouchableOpacity
+
               key={thread.id}
               style={[styles.threadCard, thread.unreadCount > 0 && styles.unreadCard]}
               onPress={() => onSelectThread(thread.id)}
