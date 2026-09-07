@@ -6,13 +6,34 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { authController } from '../controllers/auth.controller';
 import type { OAuthProfile } from '../services/auth.service';
 
+function resolvePublicUrl(): string {
+  let url = process.env['API_PUBLIC_URL'] || process.env['PUBLIC_URL'];
+  if (!url && process.env['RAILWAY_PUBLIC_DOMAIN']) {
+    url = `https://${process.env['RAILWAY_PUBLIC_DOMAIN']}`;
+  }
+  if (!url && process.env['NODE_ENV'] === 'production') {
+    url = 'https://drara-production.up.railway.app';
+  }
+  if (!url) {
+    url = 'http://localhost:3001';
+  }
+  if (process.env['NODE_ENV'] === 'production' && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+  }
+  return url;
+}
+
+const apiPublicUrl = resolvePublicUrl();
+const googleCallbackUrl = process.env['GOOGLE_CALLBACK_URL'] || `${apiPublicUrl}/auth/google/callback`;
+const githubCallbackUrl = process.env['GITHUB_CALLBACK_URL'] || `${apiPublicUrl}/auth/github/callback`;
+
 // ── Passport Strategies ──────────────────────────────────
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env['GOOGLE_CLIENT_ID'] ?? '',
       clientSecret: process.env['GOOGLE_CLIENT_SECRET'] ?? '',
-      callbackURL: process.env['GOOGLE_CALLBACK_URL'] ?? '',
+      callbackURL: googleCallbackUrl,
     },
     (_accessToken, _refreshToken, profile, done) => {
       const oauthProfile: OAuthProfile = {
@@ -32,7 +53,7 @@ passport.use(
     {
       clientID: process.env['GITHUB_CLIENT_ID'] ?? '',
       clientSecret: process.env['GITHUB_CLIENT_SECRET'] ?? '',
-      callbackURL: process.env['GITHUB_CALLBACK_URL'] ?? '',
+      callbackURL: githubCallbackUrl,
       scope: ['user:email', 'read:user'],
     },
     (_accessToken: string, _refreshToken: string, profile: { id: string; displayName: string; emails?: { value: string }[]; photos?: { value: string }[]; username?: string }, done: (err: null, user: OAuthProfile) => void) => {

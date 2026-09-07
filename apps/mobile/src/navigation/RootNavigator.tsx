@@ -91,6 +91,7 @@ function OnboardingNavigator() {
               }
             }}
             onEmailSignIn={() => navigation.navigate('Login')}
+            onAuthSuccess={() => navigation.navigate('RoleSelection')}
             onOpenDebugMenu={() => navigation.getParent()?.navigate('DebugMenu')}
           />
         )}
@@ -99,9 +100,14 @@ function OnboardingNavigator() {
         {({ navigation }) => (
           <LoginScreen
             onBackPress={() => navigation.goBack()}
-            onLoginSubmit={async () => {
-              const success = await loginWithOAuth('google');
-              if (success) {
+            onLoginSubmit={async (email) => {
+              try {
+                const res = await apiPost<{ access_token: string; refresh_token: string }>('/auth/demo', { email });
+                if (res?.access_token && res?.refresh_token) {
+                  await setTokens(res.access_token, res.refresh_token);
+                  navigation.navigate('RoleSelection');
+                }
+              } catch {
                 navigation.navigate('RoleSelection');
               }
             }}
@@ -600,6 +606,8 @@ import { apiClient } from '../services/apiClient';
 import { colors } from '../theme/tokens';
 import { DebugMenuScreen } from '../screens/debug/DebugMenuScreen';
 
+let authBootCounter = 0;
+
 // Root Stack Navigator (Onboarding, MainApp, IdeaUpload, Handshake, Group5Flow, WorkspaceFlow)
 export function RootNavigator() {
   const [loading, setLoading] = useState(true);
@@ -607,6 +615,7 @@ export function RootNavigator() {
 
   useEffect(() => {
     async function checkAuthBoot() {
+      console.log('[AUTH_BOOT] CHECK #' + (++authBootCounter));
       try {
         const authed = await isAuthenticated();
         if (authed) {

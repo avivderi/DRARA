@@ -6,15 +6,22 @@ import knex from 'knex';
 
 import { logger } from '../lib/logger';
 
+const connectionConfig = process.env['DATABASE_URL']
+  ? {
+      connectionString: process.env['DATABASE_URL'],
+      ssl: process.env['DB_SSL'] === 'false' ? false : { rejectUnauthorized: false },
+    }
+  : {
+      host: process.env['DB_HOST'] ?? 'localhost',
+      port: Number(process.env['DB_PORT'] ?? 5432),
+      database: process.env['DB_NAME'] ?? 'drara_dev',
+      user: process.env['DB_USER'] ?? 'drara',
+      password: process.env['DB_PASSWORD'] ?? '',
+    };
+
 export const db = knex({
   client: 'pg',
-  connection: {
-    host: process.env['DB_HOST'] ?? 'localhost',
-    port: Number(process.env['DB_PORT'] ?? 5432),
-    database: process.env['DB_NAME'] ?? 'drara_dev',
-    user: process.env['DB_USER'] ?? 'drara',
-    password: process.env['DB_PASSWORD'] ?? '',
-  },
+  connection: connectionConfig,
   pool: {
     min: Number(process.env['DB_POOL_MIN'] ?? 2),
     max: Number(process.env['DB_POOL_MAX'] ?? 10),

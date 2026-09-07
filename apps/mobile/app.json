@@ -42,6 +42,7 @@
       ]
     ],
     "extra": {
+      "apiUrl": "https://drara-production.up.railway.app",
       "eas": {
         "projectId": "289e6b1f-57c7-42a1-bb3a-8515f24747ba"
       }

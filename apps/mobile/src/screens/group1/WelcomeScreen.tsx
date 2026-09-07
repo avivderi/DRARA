@@ -17,6 +17,7 @@ interface WelcomeScreenProps {
   onGoogleSignIn: () => void;
   onGitHubSignIn: () => void;
   onEmailSignIn: () => void;
+  onAuthSuccess?: () => void;
   onOpenDebugMenu?: () => void;
 }
 
@@ -24,17 +25,18 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   onGoogleSignIn,
   onGitHubSignIn,
   onEmailSignIn,
+  onAuthSuccess,
   onOpenDebugMenu,
 }) => {
   useEffect(() => {
     initAuthFromUrl().then((success) => {
       if (success) {
-        onGoogleSignIn();
+        if (onAuthSuccess) onAuthSuccess();
         return;
       }
       void isAuthenticated().then((authed) => {
-        if (authed) {
-          onGoogleSignIn();
+        if (authed && onAuthSuccess) {
+          onAuthSuccess();
         }
       });
     });

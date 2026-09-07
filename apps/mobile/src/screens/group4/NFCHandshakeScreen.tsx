@@ -49,8 +49,8 @@ export const NFCHandshakeScreen: React.FC<NFCHandshakeScreenProps> = ({
             permissionsGranted: ['repo_access', 'workspace_access', 'full_description'],
           });
 
-            // Direct callback for smooth mobile UX
-            onHandshakeSuccess(['repo_access', 'workspace_access', 'full_description']);
+          // Direct callback for smooth mobile UX
+          onHandshakeSuccess(['repo_access', 'workspace_access', 'full_description']);
         } catch {
           onHandshakeSuccess(['repo_access', 'workspace_access', 'full_description']);
         } finally {
