@@ -24,11 +24,20 @@ export class JwtService {
   private readonly refreshTokenExpiresIn: string;
 
   constructor() {
-    const privatePath = process.env['JWT_PRIVATE_KEY_PATH'] ?? './keys/private.pem';
-    const publicPath = process.env['JWT_PUBLIC_KEY_PATH'] ?? './keys/public.pem';
+    if (process.env['JWT_PRIVATE_KEY']) {
+      this.privateKey = process.env['JWT_PRIVATE_KEY'].replace(/\\n/g, '\n');
+    } else {
+      const privatePath = process.env['JWT_PRIVATE_KEY_PATH'] ?? './keys/private.pem';
+      this.privateKey = fs.readFileSync(privatePath, 'utf-8');
+    }
 
-    this.privateKey = fs.readFileSync(privatePath, 'utf-8');
-    this.publicKey = fs.readFileSync(publicPath, 'utf-8');
+    if (process.env['JWT_PUBLIC_KEY']) {
+      this.publicKey = process.env['JWT_PUBLIC_KEY'].replace(/\\n/g, '\n');
+    } else {
+      const publicPath = process.env['JWT_PUBLIC_KEY_PATH'] ?? './keys/public.pem';
+      this.publicKey = fs.readFileSync(publicPath, 'utf-8');
+    }
+
     this.accessTokenExpiresIn = process.env['JWT_ACCESS_TOKEN_EXPIRES_IN'] ?? '15m';
     this.refreshTokenExpiresIn = process.env['JWT_REFRESH_TOKEN_EXPIRES_IN'] ?? '30d';
   }
