@@ -41,7 +41,7 @@ export function createApp(): Application {
   app.use(helmet());
   app.use(
     cors({
-      origin: process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000',
+      origin: process.env['CORS_ORIGIN'] ?? process.env['CLIENT_URL'] ?? process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000',
       credentials: true,
     }),
   );
