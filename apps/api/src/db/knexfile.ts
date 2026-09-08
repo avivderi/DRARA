@@ -1,8 +1,8 @@
 import path from 'node:path';
 
 import dotenv from 'dotenv';
+
 dotenv.config();
-dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 import type { Knex } from 'knex';
 
 const connectionConfig = process.env['DATABASE_URL']
