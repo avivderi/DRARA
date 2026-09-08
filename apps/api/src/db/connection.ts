@@ -1,7 +1,8 @@
 import path from 'node:path';
 
 import dotenv from 'dotenv';
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 import knex from 'knex';
 
 import { logger } from '../lib/logger';

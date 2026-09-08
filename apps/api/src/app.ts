@@ -19,7 +19,7 @@ import { createWorkspacesRouter } from './routes/workspaces.routes';
 import fs from 'fs';
 import path from 'path';
 
-const logsDir = path.resolve(__dirname, '../../../logs');
+const logsDir = path.resolve(process.cwd(), 'logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
